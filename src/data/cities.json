@@ -1,0 +1,112 @@
+[
+{
+"city": "Ahmedabad",
+"state": "Gujarat",
+"tier": 1
+},
+{
+"city": "Bengaluru",
+"state": "Karnataka",
+"tier": 1
+},
+{
+"city": "Bhopal",
+"state": "Madhya Pradesh",
+"tier": 2
+},
+{
+"city": "Chennai",
+"state": "Tamil Nadu",
+"tier": 1
+},
+{
+"city": "Coimbatore",
+"state": "Tamil Nadu",
+"tier": 2
+},
+{
+"city": "Delhi",
+"state": "Delhi",
+"tier": 1
+},
+{
+"city": "Hyderabad",
+"state": "Telangana",
+"tier": 1
+},
+{
+"city": "Indore",
+"state": "Madhya Pradesh",
+"tier": 2
+},
+{
+"city": "Jaipur",
+"state": "Rajasthan",
+"tier": 2
+},
+{
+"city": "Kochi",
+"state": "Kerala",
+"tier": 2
+},
+{
+"city": "Kolkata",
+"state": "West Bengal",
+"tier": 1
+},
+{
+"city": "Lucknow",
+"state": "Uttar Pradesh",
+"tier": 2
+},
+{
+"city": "Ludhiana",
+"state": "Punjab",
+"tier": 2
+},
+{
+"city": "Mumbai",
+"state": "Maharashtra",
+"tier": 1
+},
+{
+"city": "Mysuru",
+"state": "Karnataka",
+"tier": 2
+},
+{
+"city": "Nagpur",
+"state": "Maharashtra",
+"tier": 2
+},
+{
+"city": "Nashik",
+"state": "Maharashtra",
+"tier": 2
+},
+{
+"city": "Patna",
+"state": "Bihar",
+"tier": 2
+},
+{
+"city": "Pune",
+"state": "Maharashtra",
+"tier": 1
+},
+{
+"city": "Surat",
+"state": "Gujarat",
+"tier": 2
+},
+{
+"city": "Vadodara",
+"state": "Gujarat",
+"tier": 2
+},
+{
+"city": "Visakhapatnam",
+"state": "Andhra Pradesh",
+"tier": 2
+}
+]
