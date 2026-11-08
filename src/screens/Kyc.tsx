@@ -271,7 +271,7 @@ export function Kyc({ lang, quote, applicant, onContinue, onExpert }: {
             {result ? (
               <>
                 <div className="score">
-                  <div className="ring" style={{ background: `conic-gradient(var(--cyan) ${(passed / Math.max(1, total)) * 360}deg, var(--sunk) 0)` }}><b className="num">{passed}/{total}</b></div>
+                  <div className="ring" style={{ background: `conic-gradient(var(--ok) ${(passed / Math.max(1, total)) * 360}deg, var(--surface-2) 0)` }}><b className="num">{passed}/{total}</b></div>
                   <p>{t(lang, "ks_score", { n: passed, total })}</p>
                 </div>
                 {GROUPS.map(([key, codes]) => {

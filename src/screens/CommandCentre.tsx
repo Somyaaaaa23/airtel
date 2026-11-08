@@ -11,9 +11,9 @@ const ROUTE: Record<string, string> = { self: "Fully online", assisted: "Online 
 const FRAME: Record<string, string> = { day: "₹ per day", staff: "₹ per staff member", site: "₹ per site", downtime: "Downtime cost" };
 const LOSS = [
   { k: "process", label: "Our own process", tone: "var(--bad)" },
-  { k: "reach", label: "Unreachable or not interested", tone: "#a9b6c0" },
+  { k: "reach", label: "Unreachable or not interested", tone: "var(--chart)" },
   { k: "choice", label: "Chose not to buy", tone: "var(--warn)" },
-  { k: "network", label: "No network at site", tone: "var(--cyan)" },
+  { k: "network", label: "No network at site", tone: "var(--text)" },
 ] as const;
 const inr = (n: number) => "₹" + Math.round(n).toLocaleString("en-IN");
 const lakh = (n: number) => (n >= 1e7 ? `₹${(n / 1e7).toFixed(2)} cr` : n >= 1e5 ? `₹${(n / 1e5).toFixed(1)} lakh` : inr(n));
@@ -240,7 +240,7 @@ export function LeakFinder() {
                 const a = Math.min(0.85, Math.abs(gap) / 16 + 0.08);
                 return (
                   <span key={i} className={`hc ${a > 0.45 ? "dark" : ""}`} title={`${NAME[s.key]}, ${TRANSITIONS[i]}: ${pct(v)} (${gap > 0 ? "+" : ""}${Math.round(gap)} pts vs all)`}
-                    style={{ background: gap < 0 ? `rgb(217 72 72 / ${a})` : `rgb(33 134 106 / ${a})` }}>
+                    style={{ background: `color-mix(in srgb, var(${gap < 0 ? "--bad" : "--ok"}) ${Math.round(a * 100)}%, transparent)` }}>
                     <b className="num">{pct(v)}</b><small className="num">{gap > 0 ? "+" : ""}{Math.round(gap)}</small>
                   </span>
                 );
