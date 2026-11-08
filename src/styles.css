@@ -818,6 +818,9 @@ button { cursor: pointer; }
 /* ---------- Order tracker and end screens ---------- */
 .order-card { display: flex; flex-direction: column; gap: 6px; }
 .order-card h2 { margin: 0; font: 600 22px/1.2 var(--font-display); }
+.next-up { margin: 4px 0 0; padding: 8px 12px; border-radius: 10px; background: var(--info-soft); color: var(--info); font: 600 13.5px/1.4 var(--font-ui); }
+.track-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; padding: 10px 16px; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--surface); }
+.track-tools .fine { flex: 1 1 200px; }
 .golive { margin: 0; font: 600 15px/1.35 var(--font-ui); }
 .progress { height: 8px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
 .progress i { display: block; height: 100%; background: var(--primary); border-radius: 999px; transition: width 0.4s ease; }

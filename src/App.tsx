@@ -243,7 +243,7 @@ export default function App() {
               <Payment lang={lang} quote={quote} onPaid={placeOrder} onFailed={() => stall("payment", "First payment failed")} />
             )}
             {screen === "track" && order && (
-              <Tracker key={order.id} lang={lang} order={order} onChange={setOrder} onNew={restart} onPrivacy={openPrivacy} />
+              <Tracker key={order.id} lang={lang} order={order} onChange={setOrder} onNew={restart} onPrivacy={openPrivacy} onHelp={() => talkToExpert("Asked for help from the order tracker")} />
             )}
             {screen === "privacy" && <Privacy lang={lang} phone={phone} />}
           </div>

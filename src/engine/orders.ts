@@ -32,6 +32,8 @@ export interface Order {
   installCut?: number;
   /** Demo clock: days since the order, so the tracker keeps its place between screens. */
   simDay?: number;
+  /** Owner's choice to get each tracker update on WhatsApp (on unless they switch it off). */
+  notifyWhatsApp?: boolean;
   gstVerified: boolean;
   udyamVerified: boolean;
   visit?: { day: number; slot: VisitSlot };
@@ -96,4 +98,11 @@ export function orderId(placedOn: string, phone: string) {
   seq++;
   const n = (Number(phone.slice(-4)) * 7 + seq * 131) % 10000;
   return `AB-${placedOn.slice(2).replace(/-/g, "")}-${String(n).padStart(4, "0")}`;
+}
+
+/** The next task still to happen and the day it is due, or null when everything is done. */
+export function nextUpdate(o: Pick<Order, "items" | "kycStatus" | "visit" | "installCut" | "simDay">): { task: Task; day: number } | null {
+  const day = o.simDay ?? 0;
+  const task = planTasks(o).find((x) => x.dueDay > day);
+  return task ? { task, day: task.dueDay } : null;
 }

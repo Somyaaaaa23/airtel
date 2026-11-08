@@ -700,6 +700,12 @@ const en = {
   cam_choose: "Choose a file",
   kd_resume: "Resume later",
   kd_resumed: "Welcome back: we kept your documents and answers.",
+  tr_next: "Next update expected by {date}: {task}",
+  tr_next_done: "All steps are done. No more updates expected.",
+  tr_notify: "Notify me on WhatsApp",
+  tr_notify_on: "We'll message +91 {phone} on WhatsApp at every step.",
+  tr_notify_off: "WhatsApp updates are off. You'll see updates here only.",
+  tr_help: "Need help?",
 };
 
 export type Key = keyof typeof en;
@@ -1383,6 +1389,12 @@ const hi: Record<Key, string> = {
   cam_choose: "फ़ाइल चुनें",
   kd_resume: "बाद में जारी रखें",
   kd_resumed: "वापसी पर स्वागत: आपके दस्तावेज़ और जवाब सुरक्षित हैं।",
+  tr_next: "अगला अपडेट {date} तक: {task}",
+  tr_next_done: "सभी चरण पूरे। अब कोई अपडेट नहीं आएगा।",
+  tr_notify: "WhatsApp पर सूचना दें",
+  tr_notify_on: "हर चरण पर हम +91 {phone} पर WhatsApp करेंगे।",
+  tr_notify_off: "WhatsApp अपडेट बंद हैं। अपडेट सिर्फ़ यहाँ दिखेंगे।",
+  tr_help: "मदद चाहिए?",
 };
 
 export const STRINGS: Record<Lang, Record<Key, string>> = { en, hi };
