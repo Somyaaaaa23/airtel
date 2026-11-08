@@ -3,17 +3,26 @@
 Phone-first journey for small businesses to find, price and buy an Accel Business bundle without a sales visit.
 Built for Airtel SYNC 2026, Track A. All data is the hackathon's synthetic pack.
 
-**This build:** welcome + OTP (mock) → AI advisor chat (English / Hindi) → rule-checked bundle → live quote → document list.
-**Next builds:** Smart KYC (OCR + registry checks), order tracker, back-office dashboard with propensity score.
+**Journey:** welcome + OTP → name → AI advisor chat (English / Hindi) or "I just need a SIM" → quote with
+Essential / Recommended / Pro → **DPDP consent** → **Smart KYC** (OCR + registry checks, linked to the application) →
+**contract e-sign** → **first payment** → **order tracker**. Staff get a **back office** with a call-next list,
+a KYC review queue and an activation propensity score.
+
+Submission material: `docs/deliverables.md` (checklist and demo script), `docs/architecture.md`, `docs/privacy-note.md`.
+
+Look: light-pink-to-deep-pink background, white / grey-white text, Playfair Display headings, Times New Roman body text,
+Arial for buttons, labels and numbers.
 
 ## Run it
 
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 33 tests: catalogue rules, advisor flow, Hindi/English parsing, GSTIN checksum
+npm test             # 55 tests: catalogue rules, plan tiers, advisor flow, Hindi/English parsing, GSTIN checksum, KYC, orders, propensity
 npm run build        # production build in dist/
 npm run build:demo   # single self-contained HTML in dist-demo/ (used for the shareable demo link)
+npm run build:backoffice   # retrain the propensity model and rebuild src/data/backoffice.json from smb_leads.csv
+npm run ocr:specimens      # macOS only: re-run Apple Vision OCR on the KYC specimen images → src/data/kyc_ocr.json
 ```
 
 ## How it works
@@ -60,6 +69,90 @@ Derived from the 368 activated bundles in `smb_leads.csv`:
 - **Udyam lookup:** `UDYAM-XX-00-0000000` format, district `00` accepted.
 - **Fibre feasibility:** deterministic for demos. PIN codes whose digits sum to a multiple of 7 have no fibre (e.g. 800006, 452030); 302001 has fibre.
 
+## Real OTP with Twilio (left for last)
+
+OTP is mocked (any 6 digits) until you set it up. The browser never holds Twilio keys:
+
+```bash
+TWILIO_ACCOUNT_SID=AC... TWILIO_AUTH_TOKEN=... TWILIO_VERIFY_SID=VA... node server/otp-twilio.mjs
+VITE_OTP_API=http://localhost:8787 npm run dev
+```
+
+Create a Verify service in the Twilio console to get the `VA...` SID. A trial account only sends to verified numbers.
+The same OTP is used to e-sign the contract (`src/services/otp.ts`).
+
+## Consent, contract and payment
+
+- **Consent** (`screens/Consent.tsx`, `services/consent.ts`): one checkbox per purpose (KYC and installation are required;
+  updates and offers are optional), each with what / why / how long / who sees it. Every choice is logged with time and
+  notice version; owners withdraw from the Privacy page. Staff see the log in the back office.
+- **Privacy & your data** (`screens/Privacy.tsx`): the privacy note in English and Hindi, plus the owner's consents.
+- **Contract** (`screens/Contract.tsx`): plan, key terms in plain words, signed by OTP or Aadhaar e-sign (mocked), so the
+  signatory needn't meet anyone (53 leads dropped because the signatory wasn't available).
+- **Payment** (`screens/Payment.tsx`): setup fee + first month by UPI or card (mocked). A demo switch forces a failure
+  to show the retry (28 leads dropped at first payment). A failed payment is logged as a lead for the call list.
+
+## Smart KYC (`src/engine/kyc.ts`, `src/screens/Kyc.tsx`)
+
+Comes after the consent screen. Four document slots: GST certificate, Udyam certificate, signatory ID and address proof.
+The owner confirms the fields OCR read, or corrects them (corrections are flagged for the review queue). Checks run against
+the **application** too: the GSTIN typed in the chat, the state of the city named, and the name given at sign-in.
+Without GST products, a business PAN is accepted (sent for review). When the owner is stuck, one tap logs a lead for an expert call.
+The demos "Insurance agency in Visakhapatnam" and "Furniture workshop in Nagpur" use GSTINs from specimens K09 and K03;
+the KYC screen marks that specimen "Matches your business". The plan decides what is required: GST-only products need a verified, active
+GST certificate; otherwise GST *or* Udyam is enough.
+
+**OCR.** `scripts/ocr_specimens.swift` runs Apple Vision on the 47 specimen images (after stripping the pink watermark) and
+saves every text line with its position and confidence. `services/ocr.ts` serves those lines like an OCR API would. In the
+browser you can load a specimen applicant (K01–K12) or upload one of the specimen files; other photos can't be read in
+this prototype.
+
+**Parsing.** `parseDocument` finds the document type from its title, pairs each value with its label by position
+(correcting for tilted photos), joins addresses that wrap, fixes O/0 and I/1 slips in GSTINs only where the checksum
+confirms the fix, and flags blurred photos from low OCR confidence.
+
+**Checks**, each with a plain English / Hindi explanation and fix:
+
+| Check | Catches |
+| --- | --- |
+| Readable, right document, required fields present | K04 blurred GST certificate; K01 Udyam number missing |
+| GSTIN format + checksum, with the nearest registry GSTIN | K06 GSTIN differs from the registry at one character |
+| GSTIN registry status (Active needed for GST-only products) | K01 GSTIN cancelled |
+| Legal / trade name and address against the GST registry | K07 legal name doesn't match |
+| Udyam number, name and city against the Udyam registry | |
+| Same business name on every document (allows one OCR slip per 15 letters) | |
+| Signatory is the proprietor, a partner or a director; otherwise review | K05, K10, K11 go to review for an authorisation letter |
+| ID not expired; bill dated within 90 days of 2026-07-15 | K11 bill from Oct 2025 |
+| Bill address matches the registered address | |
+| Certificate GSTIN = GSTIN typed in the chat | Wrong certificate for the quoted business |
+| GSTIN state code = state of the city named and of the GST address | |
+| Signatory ID name = name given at sign-in | |
+
+Clean files (K02, K03, K08, K09, K12) pass. `engine/kyc.test.ts` runs all 12 applicants.
+
+## Order tracker (`src/engine/orders.ts`, `src/screens/Tracker.tsx`)
+
+Placing an order turns the quote into dated tasks: order placed, KYC (a day later if it needs review), the technician visit
+at a slot the owner picks, then each product on its `typical_install_days`. SIMs and cloud services don't wait for the visit.
+Go-live matches the quote's estimate. Products slower than 21 days (leased lines) get an up-front note, since "installation
+delayed beyond 21 days" is a drop reason. Every step adds a WhatsApp-style update, because activated customers made 3
+chasing calls on average. Demo buttons step through the days.
+
+## Back office (`src/screens/BackOffice.tsx`, staff view, English)
+
+Built from `smb_leads.csv` by `scripts/build_backoffice.ts`:
+- quarter KPIs, funnel with stage conversion, channel economics
+- drop reasons, each tagged with the part of this journey that answers it (63.5% of lost leads)
+- **propensity model** (`engine/propensity.ts`): logistic regression on lead-time facts only (channel, segment, size,
+  GST/Udyam, current internet, spend, products asked about). Held-out AUC 0.70; the top 30% of scores hold 54% of
+  activations. Shows deciles, the strongest drivers, and a back-test table.
+- **call next**: open leads from the app (expert asked, stuck at KYC, payment failed) and 15 win-back leads from last
+  quarter, each labelled Hot / Warm / Cold (top 30% / next 30% of held-out scores)
+- **KYC review queue**: flagged files with extracted fields side by side (IDs masked), approve / reject with a reason;
+  the owner's tracker updates
+- applications placed in the owner app on this device (kept in `localStorage`), each with its score and a next action
+- consent log
+
 ## Demo businesses
 
 The demo panel (right side on desktop, ✦ button on phones) sends a typed message as an owner would:
@@ -76,10 +169,14 @@ The demo panel (right side on desktop, ✦ button on phones) sends a typed messa
 ## Code map
 
 ```
-src/engine/      catalogue loader, eligibility rules, recommender, quote, GSTIN checksum (pure TypeScript, no UI)
-src/services/    free-text parser, mock GSTIN/Udyam registry APIs, mock feasibility API
+src/engine/      catalogue, eligibility, recommender, quote, GSTIN checksum, KYC rules, order plan, propensity model (no UI)
+src/services/    free-text parser, mock GSTIN/Udyam/feasibility/OCR APIs, order store, lead scoring
 src/advisor/     conversation flow (which question next) and explanation text
 src/i18n/        all English and Hindi copy
-src/screens/     Welcome, Advisor, Quote, end screens
-src/data/        hackathon CSVs, city tiers, business types, demo scripts
+src/screens/     Welcome, Advisor, SIM path, Quote, Consent, Smart KYC, Contract, Payment, Tracker, Privacy, back office
+src/data/        hackathon CSVs, OCR output, back-office summary + model, city tiers, business types, demo scripts
+public/kyc/      the 47 KYC specimen images (shown as thumbnails)
+scripts/         OCR (Swift / Apple Vision) and back-office model builder
+server/          optional OTP server for Twilio Verify
+docs/            submission checklist, architecture diagram, privacy note
 ```

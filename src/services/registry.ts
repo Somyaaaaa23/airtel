@@ -6,6 +6,7 @@ import gstRaw from "../data/mock_gstin_registry.csv?raw";
 import udyamRaw from "../data/mock_udyam_registry.csv?raw";
 import { parseCsv } from "../engine/csv";
 import { validateGstinFormat } from "../engine/gstin";
+import type { Registry } from "../engine/kyc";
 
 export interface GstinRecord {
   gstin: string;
@@ -73,3 +74,10 @@ export async function lookupUdyam(input: string): Promise<{ result: "invalid_for
 }
 
 export const allGstins = () => [...gst().values()];
+
+/** Synchronous view of both registries for the KYC rules (src/engine/kyc.ts). */
+export const KYC_REGISTRY: Registry = {
+  gstin: (g) => gst().get(g),
+  udyam: (u) => udyam().get(u),
+  allGstins: () => [...gst().keys()],
+};

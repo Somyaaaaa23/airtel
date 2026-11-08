@@ -3,6 +3,7 @@ import { blockText, joinList, noteText, pBlurb, pName, reasonText, unitLabel } f
 import { product } from "../engine/catalogue";
 import { checkDependency, dependentsOf } from "../engine/eligibility";
 import { computeQuote } from "../engine/quote";
+import { defaultPlan } from "../engine/recommend";
 import type { LineItem, Plan, Profile, Recommendation } from "../engine/types";
 import { inr, t, type Lang } from "../i18n/strings";
 
@@ -14,12 +15,16 @@ export interface QuoteResult { items: { productId: string; qty: number }[]; prof
 export function Quote({ lang, profile, rec, onKyc, onExpert }: {
   lang: Lang; profile: Profile; rec: Recommendation; onKyc: (q: QuoteResult) => void; onExpert: (q: QuoteResult) => void;
 }) {
-  const [planKey, setPlanKey] = useState<Plan["key"]>("recommended");
-  const rowsFor = (key: Plan["key"]): Row[] => [
-    ...rec.plans.find((p) => p.key === key)!.items.map((i) => ({ ...i, on: true })),
-    ...rec.addons.map((a) => ({ ...a, on: false })),
-  ];
-  const [rows, setRows] = useState<Row[]>(() => rowsFor("recommended"));
+  const initialPlan = defaultPlan(rec, profile);
+  const [planKey, setPlanKey] = useState<Plan["key"]>(initialPlan);
+  const rowsFor = (key: Plan["key"]): Row[] => {
+    const items = rec.plans.find((p) => p.key === key)!.items;
+    return [
+      ...items.map((i) => ({ ...i, on: true })),
+      ...rec.addons.filter((a) => !items.some((i) => i.productId === a.productId)).map((a) => ({ ...a, on: false })),
+    ];
+  };
+  const [rows, setRows] = useState<Row[]>(() => rowsFor(initialPlan));
   const [confirmFor, setConfirmFor] = useState<string | null>(null);
 
   const active = rows.filter((r) => r.on);
@@ -36,7 +41,9 @@ export function Quote({ lang, profile, rec, onKyc, onExpert }: {
   const setQty = (id: string, qty: number) => setRows((rs) => rs.map((r) => (r.productId === id ? { ...r, qty: Math.min(50, Math.max(1, qty)) } : r)));
 
   const gstNeededBy = activeIds.filter((id) => product(id).requiresGstin);
-  const planTotals = rec.plans.map((p) => ({ key: p.key, monthly: computeQuote(p.items).monthly }));
+  const TIER_ORDER: Plan["key"][] = ["starter", "recommended", "pro"];
+  const planTotals = [...rec.plans].sort((a, b) => TIER_ORDER.indexOf(a.key) - TIER_ORDER.indexOf(b.key))
+    .map((p) => ({ key: p.key, monthly: computeQuote(p.items).monthly }));
   const traceRows: { id: string; kind: "in" | "opt" | "out"; why?: string }[] = [
     ...rows.map((r) => ({ id: r.productId, kind: r.optional ? ("opt" as const) : ("in" as const) })),
     ...rec.blocked.map((b) => ({ id: b.productId, kind: "out" as const, why: b.blocks.map((x) => blockText(x, lang)).join("; ") })),
@@ -87,12 +94,14 @@ export function Quote({ lang, profile, rec, onKyc, onExpert }: {
           <div className="tabs" role="tablist">
             {planTotals.map((p) => (
               <button key={p.key} role="tab" aria-selected={planKey === p.key} onClick={() => switchPlan(p.key)}>
-                {t(lang, p.key === "recommended" ? "plan_recommended" : "plan_starter")}
+                {t(lang, p.key === "recommended" ? "plan_recommended" : p.key === "pro" ? "plan_pro" : "plan_starter")}
                 <small>{inr(p.monthly)}{t(lang, "perMonth")}</small>
               </button>
             ))}
           </div>
         )}
+        {initialPlan === "starter" && planKey === "starter" && profile.monthlySpend
+          ? <div className="notice info">{t(lang, "budgetNote", { cur: inr(profile.monthlySpend) })}</div> : null}
         {rec.notes.map((n, i) => <div key={i} className="notice info">{noteText(n, lang)}</div>)}
 
         <section className="bill" aria-label={t(lang, "included")}>

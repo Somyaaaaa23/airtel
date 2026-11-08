@@ -7,7 +7,7 @@ import {
 import { BUSINESS_TYPES, CITIES, QUICK_TYPES } from "../data/reference";
 import { maskId } from "../engine/gstin";
 import { computeQuote } from "../engine/quote";
-import { recommend } from "../engine/recommend";
+import { defaultPlan, recommend } from "../engine/recommend";
 import type { Need, Profile, Recommendation, SpeedPref } from "../engine/types";
 import { inr, t, type Key, type Lang } from "../i18n/strings";
 import { checkFeasibility, isValidPincode } from "../services/feasibility";
@@ -221,11 +221,12 @@ export function Advisor({ lang, initialText, onQuote }: { lang: Lang; initialTex
 }
 
 function RecCard({ lang, profile, rec, onQuote }: { lang: Lang; profile: Profile; rec: Recommendation; onQuote: () => void }) {
-  const plan = rec.plans[0];
+  const key = defaultPlan(rec, profile);
+  const plan = rec.plans.find((p) => p.key === key)!;
   const q = computeQuote(plan.items);
   return (
     <section className="rec" aria-label={t(lang, "plan_recommended")}>
-      <h3>{t(lang, "plan_recommended")}</h3>
+      <h3>{t(lang, key === "starter" ? "plan_starter" : "plan_recommended")}</h3>
       {q.lines.map((l) => (
         <div className="recline" key={l.product.id}>
           <span className="n">{l.product.name}{l.qty > 1 ? ` × ${l.qty}` : ""}</span>

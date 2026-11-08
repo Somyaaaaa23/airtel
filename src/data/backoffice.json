@@ -1,0 +1,711 @@
+{
+ "source": "smb_leads.csv: 5,000 leads, Apr–Jun 2026 (synthetic hackathon data)",
+ "kpis": {
+  "leads": 5000,
+  "activated": 368,
+  "activationRate": 7.4,
+  "avgDaysToActivation": 17.6,
+  "avgFollowUps": 3,
+  "costPerActivation": 15053,
+  "avgMonthlyValue": 12351,
+  "churn6m": 15.2,
+  "avgNps": 6.9
+ },
+ "funnel": [
+  {
+   "stage": "Lead",
+   "count": 5000
+  },
+  {
+   "stage": "Contacted",
+   "count": 3406
+  },
+  {
+   "stage": "Needs assessed",
+   "count": 1974
+  },
+  {
+   "stage": "Quote accepted",
+   "count": 861
+  },
+  {
+   "stage": "KYC complete",
+   "count": 588
+  },
+  {
+   "stage": "Activated",
+   "count": 368
+  }
+ ],
+ "drops": [
+  {
+   "reason": "Unreachable after 3 attempts",
+   "count": 805,
+   "stage": "Lead",
+   "fixedBy": "score"
+  },
+  {
+   "reason": "Owner had no time for a visit",
+   "count": 531,
+   "stage": "Contacted",
+   "fixedBy": "advisor"
+  },
+  {
+   "reason": "Not interested on first call",
+   "count": 470,
+   "stage": "Lead",
+   "fixedBy": null
+  },
+  {
+   "reason": "Price too high",
+   "count": 414,
+   "stage": "Needs assessed",
+   "fixedBy": "quote"
+  },
+  {
+   "reason": "Locked in with current provider",
+   "count": 325,
+   "stage": "Contacted",
+   "fixedBy": null
+  },
+  {
+   "reason": "Wrong or invalid number",
+   "count": 319,
+   "stage": "Lead",
+   "fixedBy": "otp"
+  },
+  {
+   "reason": "Visit not scheduled by sales",
+   "count": 296,
+   "stage": "Contacted",
+   "fixedBy": "advisor"
+  },
+  {
+   "reason": "Only wanted a mobile plan",
+   "count": 280,
+   "stage": "Contacted",
+   "fixedBy": "sim"
+  },
+  {
+   "reason": "Competitor offered cheaper plan",
+   "count": 207,
+   "stage": "Needs assessed",
+   "fixedBy": null
+  },
+  {
+   "reason": "Quote too complex to understand",
+   "count": 206,
+   "stage": "Needs assessed",
+   "fixedBy": "quote"
+  },
+  {
+   "reason": "Quote took too long to arrive",
+   "count": 179,
+   "stage": "Needs assessed",
+   "fixedBy": "quote"
+  },
+  {
+   "reason": "Decided to wait",
+   "count": 107,
+   "stage": "Needs assessed",
+   "fixedBy": null
+  },
+  {
+   "reason": "Installation delayed beyond 21 days",
+   "count": 98,
+   "stage": "KYC complete",
+   "fixedBy": "tracker"
+  },
+  {
+   "reason": "Missing GST or Udyam document",
+   "count": 94,
+   "stage": "Quote accepted",
+   "fixedBy": "kyc"
+  },
+  {
+   "reason": "Found paperwork too long",
+   "count": 79,
+   "stage": "Quote accepted",
+   "fixedBy": "kyc"
+  },
+  {
+   "reason": "Authorised signatory not available",
+   "count": 53,
+   "stage": "Quote accepted",
+   "fixedBy": "esign"
+  },
+  {
+   "reason": "Customer cancelled before install",
+   "count": 53,
+   "stage": "KYC complete",
+   "fixedBy": null
+  },
+  {
+   "reason": "Document details did not match",
+   "count": 47,
+   "stage": "Quote accepted",
+   "fixedBy": "kyc"
+  },
+  {
+   "reason": "Site not feasible for fibre",
+   "count": 41,
+   "stage": "KYC complete",
+   "fixedBy": "advisor"
+  },
+  {
+   "reason": "First payment failed",
+   "count": 28,
+   "stage": "KYC complete",
+   "fixedBy": "payment"
+  }
+ ],
+ "channels": [
+  {
+   "source": "Field sales",
+   "leads": 1720,
+   "activationRate": 7.3,
+   "costPerActivation": 24335
+  },
+  {
+   "source": "Channel partner",
+   "leads": 1010,
+   "activationRate": 8,
+   "costPerActivation": 20851
+  },
+  {
+   "source": "Website form",
+   "leads": 995,
+   "activationRate": 4.3,
+   "costPerActivation": 6352
+  },
+  {
+   "source": "Inbound call",
+   "leads": 504,
+   "activationRate": 9.5,
+   "costPerActivation": 5113
+  },
+  {
+   "source": "Referral",
+   "leads": 413,
+   "activationRate": 14.8,
+   "costPerActivation": 4099
+  },
+  {
+   "source": "WhatsApp campaign",
+   "leads": 358,
+   "activationRate": 2.8,
+   "costPerActivation": 4026
+  }
+ ],
+ "model": {
+  "bias": -2.6955,
+  "weights": {
+   "gstin": 0.3303,
+   "interests": -0.039,
+   "internet=Business broadband": -0.0351,
+   "internet=Home broadband": 0.0079,
+   "internet=Leased line": 0.0406,
+   "internet=Mixed per site": 0.0431,
+   "internet=Mobile hotspot": -0.0374,
+   "internet=None": -0.0302,
+   "language=English": 0.0177,
+   "language=Hindi": 0.0543,
+   "language=Regional": -0.0831,
+   "log_employees": 0.0593,
+   "log_spend": 0.1554,
+   "role=Manager": 0.0302,
+   "role=Office admin": -0.0592,
+   "role=Owner": 0.0231,
+   "role=Partner": -0.0052,
+   "segment=Micro retail & services": -0.1972,
+   "segment=Professional offices": 0.1502,
+   "segment=Small manufacturers": 0.047,
+   "segment=Small multi-site businesses": -0.0112,
+   "sites": -0.0342,
+   "source=Channel partner": 0.0526,
+   "source=Field sales": -0.0209,
+   "source=Inbound call": 0.1086,
+   "source=Referral": 0.2242,
+   "source=Website form": -0.2248,
+   "source=WhatsApp campaign": -0.1509,
+   "tier2": -0.1683,
+   "turnover=1.5 - 5 cr": -0.0072,
+   "turnover=25 - 100 cr": -0.004,
+   "turnover=40 lakh - 1.5 cr": -0.0267,
+   "turnover=5 - 25 cr": 0.105,
+   "turnover=< 40 lakh": -0.0782,
+   "udyam": 0.0405
+  },
+  "mean": {
+   "log_employees": 2.2791630918414705,
+   "log_spend": 7.496630515510047,
+   "sites": 2.04975,
+   "interests": 1.99275
+  },
+  "std": {
+   "log_employees": 1.1831891783260313,
+   "log_spend": 1.0721275873801315,
+   "sites": 2.6023594942858077,
+   "interests": 0.8122176047710317
+  }
+ },
+ "metrics": {
+  "auc": 0.702,
+  "trainSize": 4000,
+  "testSize": 1000,
+  "baseRate": 7.9,
+  "top30Capture": 54.4,
+  "deciles": [
+   {
+    "decile": 1,
+    "leads": 100,
+    "activationRate": 14,
+    "minScore": 11.8
+   },
+   {
+    "decile": 2,
+    "leads": 100,
+    "activationRate": 18,
+    "minScore": 10.2
+   },
+   {
+    "decile": 3,
+    "leads": 100,
+    "activationRate": 11,
+    "minScore": 8.9
+   },
+   {
+    "decile": 4,
+    "leads": 100,
+    "activationRate": 12,
+    "minScore": 7.6
+   },
+   {
+    "decile": 5,
+    "leads": 100,
+    "activationRate": 8,
+    "minScore": 6.4
+   },
+   {
+    "decile": 6,
+    "leads": 100,
+    "activationRate": 5,
+    "minScore": 5.5
+   },
+   {
+    "decile": 7,
+    "leads": 100,
+    "activationRate": 6,
+    "minScore": 4.9
+   },
+   {
+    "decile": 8,
+    "leads": 100,
+    "activationRate": 1,
+    "minScore": 4.3
+   },
+   {
+    "decile": 9,
+    "leads": 100,
+    "activationRate": 2,
+    "minScore": 3.7
+   },
+   {
+    "decile": 10,
+    "leads": 100,
+    "activationRate": 2,
+    "minScore": 2.2
+   }
+  ]
+ },
+ "thresholds": {
+  "hot": 8.88,
+  "warm": 5.48
+ },
+ "callNext": [
+  {
+   "leadId": "L01419",
+   "business": "Navkar Auto Components Pvt Ltd",
+   "type": "Auto-parts unit",
+   "city": "Bengaluru",
+   "contact": "Thomas Pillai (Office admin)",
+   "language": "Hindi",
+   "source": "Referral",
+   "stage": "Lead",
+   "reason": "Unreachable after 3 attempts",
+   "score": 19.2,
+   "label": "Hot"
+  },
+  {
+   "leadId": "L04343",
+   "business": "Shree Polymers",
+   "type": "Plastic moulding unit",
+   "city": "Ahmedabad",
+   "contact": "Divya Joshi (Owner)",
+   "language": "Hindi",
+   "source": "Referral",
+   "stage": "Lead",
+   "reason": "Unreachable after 3 attempts",
+   "score": 19.1,
+   "label": "Hot"
+  },
+  {
+   "leadId": "L01593",
+   "business": "Pearl Printers",
+   "type": "Printing press",
+   "city": "Patna",
+   "contact": "Venkat Fernandes (Manager)",
+   "language": "Hindi",
+   "source": "Referral",
+   "stage": "Needs assessed",
+   "reason": "Quote too complex to understand",
+   "score": 16.5,
+   "label": "Hot"
+  },
+  {
+   "leadId": "L03538",
+   "business": "Silver Oak Textiles",
+   "type": "Textile unit",
+   "city": "Delhi",
+   "contact": "Sunita Gupta (Owner)",
+   "language": "Hindi",
+   "source": "Channel partner",
+   "stage": "Lead",
+   "reason": "Unreachable after 3 attempts",
+   "score": 16.4,
+   "label": "Hot"
+  },
+  {
+   "leadId": "L04071",
+   "business": "Apex Packaging",
+   "type": "Packaging unit",
+   "city": "Delhi",
+   "contact": "Anita Sharma (Partner)",
+   "language": "Hindi",
+   "source": "Field sales",
+   "stage": "Lead",
+   "reason": "Unreachable after 3 attempts",
+   "score": 16.3,
+   "label": "Hot"
+  },
+  {
+   "leadId": "L03343",
+   "business": "Metro Auto Components Pvt Ltd",
+   "type": "Auto-parts unit",
+   "city": "Pune",
+   "contact": "Prakash Iyer (Office admin)",
+   "language": "Hindi",
+   "source": "Channel partner",
+   "stage": "Contacted",
+   "reason": "Visit not scheduled by sales",
+   "score": 15.9,
+   "label": "Hot"
+  },
+  {
+   "leadId": "L01173",
+   "business": "Shree Stays",
+   "type": "Budget hotel group",
+   "city": "Nashik",
+   "contact": "Farhan Gowda (Manager)",
+   "language": "English",
+   "source": "Referral",
+   "stage": "Needs assessed",
+   "reason": "Quote too complex to understand",
+   "score": 15.8,
+   "label": "Hot"
+  },
+  {
+   "leadId": "L01744",
+   "business": "Galaxy Woodcraft Pvt Ltd",
+   "type": "Furniture workshop",
+   "city": "Pune",
+   "contact": "Sneha Menon (Owner)",
+   "language": "Hindi",
+   "source": "Field sales",
+   "stage": "KYC complete",
+   "reason": "First payment failed",
+   "score": 15.7,
+   "label": "Hot"
+  },
+  {
+   "leadId": "L01535",
+   "business": "Galaxy Auto Components LLP",
+   "type": "Auto-parts unit",
+   "city": "Delhi",
+   "contact": "Meera Fernandes (Manager)",
+   "language": "Hindi",
+   "source": "Field sales",
+   "stage": "Contacted",
+   "reason": "Owner had no time for a visit",
+   "score": 15.7,
+   "label": "Hot"
+  },
+  {
+   "leadId": "L01318",
+   "business": "Sahyadri Textiles LLP",
+   "type": "Textile unit",
+   "city": "Pune",
+   "contact": "Fatima Banerjee (Owner)",
+   "language": "Marathi",
+   "source": "Channel partner",
+   "stage": "Needs assessed",
+   "reason": "Quote too complex to understand",
+   "score": 15.6,
+   "label": "Hot"
+  },
+  {
+   "leadId": "L04381",
+   "business": "City Printers Pvt Ltd",
+   "type": "Printing press",
+   "city": "Bengaluru",
+   "contact": "Joseph Iyer (Partner)",
+   "language": "Hindi",
+   "source": "Channel partner",
+   "stage": "Lead",
+   "reason": "Unreachable after 3 attempts",
+   "score": 15.5,
+   "label": "Hot"
+  },
+  {
+   "leadId": "L01455",
+   "business": "Royal Printers LLP",
+   "type": "Printing press",
+   "city": "Kolkata",
+   "contact": "Amit Mukherjee (Partner)",
+   "language": "Hindi",
+   "source": "Channel partner",
+   "stage": "Contacted",
+   "reason": "Owner had no time for a visit",
+   "score": 15.4,
+   "label": "Hot"
+  },
+  {
+   "leadId": "L00601",
+   "business": "Unity Foods Pvt Ltd",
+   "type": "Food processing unit",
+   "city": "Bengaluru",
+   "contact": "Kavita Joshi (Owner)",
+   "language": "English",
+   "source": "Channel partner",
+   "stage": "KYC complete",
+   "reason": "First payment failed",
+   "score": 15.4,
+   "label": "Hot"
+  },
+  {
+   "leadId": "L02494",
+   "business": "Balaji Dental Care",
+   "type": "Dental clinic",
+   "city": "Delhi",
+   "contact": "Mary Sheikh (Partner)",
+   "language": "Hindi",
+   "source": "Referral",
+   "stage": "Contacted",
+   "reason": "Visit not scheduled by sales",
+   "score": 15.3,
+   "label": "Hot"
+  },
+  {
+   "leadId": "L03651",
+   "business": "Trinity Insurance Advisors",
+   "type": "Insurance agency",
+   "city": "Hyderabad",
+   "contact": "Rekha Mishra (Office admin)",
+   "language": "Hindi",
+   "source": "Referral",
+   "stage": "Lead",
+   "reason": "Unreachable after 3 attempts",
+   "score": 15.3,
+   "label": "Hot"
+  }
+ ],
+ "winBackPool": 2378,
+ "drivers": {
+  "up": [
+   {
+    "feature": "gstin",
+    "label": "Has GSTIN",
+    "weight": 0.3303
+   },
+   {
+    "feature": "source=Referral",
+    "label": "Came via Referral",
+    "weight": 0.2242
+   },
+   {
+    "feature": "log_spend",
+    "label": "Higher telecom spend today",
+    "weight": 0.1554
+   },
+   {
+    "feature": "segment=Professional offices",
+    "label": "Segment: Professional offices",
+    "weight": 0.1502
+   },
+   {
+    "feature": "source=Inbound call",
+    "label": "Came via Inbound call",
+    "weight": 0.1086
+   },
+   {
+    "feature": "turnover=5 - 25 cr",
+    "label": "Turnover 5 - 25 cr",
+    "weight": 0.105
+   }
+  ],
+  "down": [
+   {
+    "feature": "source=Website form",
+    "label": "Came via Website form",
+    "weight": -0.2248
+   },
+   {
+    "feature": "segment=Micro retail & services",
+    "label": "Segment: Micro retail & services",
+    "weight": -0.1972
+   },
+   {
+    "feature": "tier2",
+    "label": "Tier-2 city",
+    "weight": -0.1683
+   },
+   {
+    "feature": "source=WhatsApp campaign",
+    "label": "Came via WhatsApp campaign",
+    "weight": -0.1509
+   },
+   {
+    "feature": "language=Regional",
+    "label": "Prefers Regional",
+    "weight": -0.0831
+   },
+   {
+    "feature": "turnover=< 40 lakh",
+    "label": "Turnover < 40 lakh",
+    "weight": -0.0782
+   }
+  ]
+ },
+ "sample": [
+  {
+   "leadId": "L02320",
+   "business": "Unity Packaging Pvt Ltd",
+   "type": "Packaging unit",
+   "city": "Jaipur",
+   "source": "Referral",
+   "score": 17.9,
+   "outcome": "Dropped",
+   "dropReason": "Only wanted a mobile plan"
+  },
+  {
+   "leadId": "L04350",
+   "business": "Zenith Woodcraft LLP",
+   "type": "Furniture workshop",
+   "city": "Mumbai",
+   "source": "Referral",
+   "score": 17.9,
+   "outcome": "Activated",
+   "dropReason": null
+  },
+  {
+   "leadId": "L04145",
+   "business": "Star Polymers",
+   "type": "Plastic moulding unit",
+   "city": "Mumbai",
+   "source": "Channel partner",
+   "score": 17,
+   "outcome": "Dropped",
+   "dropReason": "Wrong or invalid number"
+  },
+  {
+   "leadId": "L02005",
+   "business": "Sunrise Polymers",
+   "type": "Plastic moulding unit",
+   "city": "Chennai",
+   "source": "Referral",
+   "score": 16.5,
+   "outcome": "Dropped",
+   "dropReason": "Wrong or invalid number"
+  },
+  {
+   "leadId": "L03125",
+   "business": "Shree Printers",
+   "type": "Printing press",
+   "city": "Kolkata",
+   "source": "Inbound call",
+   "score": 15.9,
+   "outcome": "Activated",
+   "dropReason": null
+  },
+  {
+   "leadId": "L01535",
+   "business": "Galaxy Auto Components LLP",
+   "type": "Auto-parts unit",
+   "city": "Delhi",
+   "source": "Field sales",
+   "score": 15.7,
+   "outcome": "Dropped",
+   "dropReason": "Owner had no time for a visit"
+  },
+  {
+   "leadId": "L01455",
+   "business": "Royal Printers LLP",
+   "type": "Printing press",
+   "city": "Kolkata",
+   "source": "Channel partner",
+   "score": 15.4,
+   "outcome": "Dropped",
+   "dropReason": "Owner had no time for a visit"
+  },
+  {
+   "leadId": "L02185",
+   "business": "Navkar Textiles",
+   "type": "Textile unit",
+   "city": "Hyderabad",
+   "source": "Channel partner",
+   "score": 15.3,
+   "outcome": "Dropped",
+   "dropReason": "Price too high"
+  },
+  {
+   "leadId": "L04025",
+   "business": "Sai Mobile Care",
+   "type": "Mobile repair shop",
+   "city": "Bhopal",
+   "source": "WhatsApp campaign",
+   "score": 2.6,
+   "outcome": "Dropped",
+   "dropReason": "Not interested on first call"
+  },
+  {
+   "leadId": "L02170",
+   "business": "Saffron Sweets",
+   "type": "Sweet shop",
+   "city": "Jaipur",
+   "source": "Website form",
+   "score": 2.6,
+   "outcome": "Dropped",
+   "dropReason": "Price too high"
+  },
+  {
+   "leadId": "L01525",
+   "business": "Riddhi Hardware",
+   "type": "Hardware store",
+   "city": "Vadodara",
+   "source": "Website form",
+   "score": 2.5,
+   "outcome": "Dropped",
+   "dropReason": "Not interested on first call"
+  },
+  {
+   "leadId": "L00465",
+   "business": "Om Stationers",
+   "type": "Stationery shop",
+   "city": "Kochi",
+   "source": "Website form",
+   "score": 2.2,
+   "outcome": "Dropped",
+   "dropReason": "Visit not scheduled by sales"
+  }
+ ]
+}

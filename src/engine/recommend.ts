@@ -170,7 +170,18 @@ export function recommend(profile: Profile): Recommendation {
     .filter((id) => !product(id).requiresOneOf.length || inBundle.length > 0)
     .map((id) => ({ productId: id, qty: quantityFor(id, profile), reason: { kind: "addon", segment: profile.segment }, optional: true }));
 
+  if (addons.length) plans.push({ key: "pro", items: [...rec.items, ...addons] });
   return { plans, addons, blocked: rec.blocked, notes: rec.notes };
+}
+
+/** Quotes above 2x current spend lose most buyers, so the first plan shown stays near what the owner pays today. */
+export const BUDGET_MULTIPLE = 2;
+export function defaultPlan(rec: Recommendation, profile: Profile): Plan["key"] {
+  const spend = profile.monthlySpend;
+  const starter = rec.plans.find((p) => p.key === "starter");
+  if (!spend || !starter) return "recommended";
+  const recTotal = computeQuote(rec.plans[0].items).monthly;
+  return recTotal > spend * BUDGET_MULTIPLE && computeQuote(starter.items).monthly < recTotal ? "starter" : "recommended";
 }
 
 export { FIBRE_PRODUCTS };

@@ -3,7 +3,7 @@ import { CATALOGUE, product } from "./catalogue";
 import { checkProduct, dependentsOf, validateBundle } from "./eligibility";
 import { gstinChecksum, validateGstinFormat } from "./gstin";
 import { computeQuote } from "./quote";
-import { recommend } from "./recommend";
+import { defaultPlan, recommend } from "./recommend";
 import type { Profile } from "./types";
 import { allGstins, lookupGstin, lookupUdyam } from "../services/registry";
 import { checkFeasibility } from "../services/feasibility";
@@ -145,5 +145,20 @@ describe("GSTIN and registries", () => {
   it("mock feasibility is deterministic", async () => {
     expect((await checkFeasibility("452030")).fibre).toBe(false);
     expect((await checkFeasibility("302001")).fibre).toBe(true);
+  });
+});
+
+describe("plan tiers", () => {
+  const clinic: Profile = { ...base, segment: "prof", employees: 12, tier: 1, hasActiveGstin: true, needs: ["internet", "calling", "email_office", "device_security"], speedPref: "fast" };
+  it("Pro is the recommended plan plus every add-on, and every rule still holds", () => {
+    const r = recommend(clinic);
+    const pro = r.plans.find((p) => p.key === "pro")!;
+    expect(pro.items.length).toBe(r.plans[0].items.length + r.addons.length);
+    expect(validateBundle(pro.items.map((i) => i.productId), clinic)).toEqual([]);
+  });
+  it("starts with Essential when Recommended costs more than twice today's spend", () => {
+    const r = recommend({ ...clinic, monthlySpend: 1000 });
+    expect(defaultPlan(r, { ...clinic, monthlySpend: 1000 })).toBe(r.plans.some((p) => p.key === "starter") ? "starter" : "recommended");
+    expect(defaultPlan(r, { ...clinic, monthlySpend: 100000 })).toBe("recommended");
   });
 });

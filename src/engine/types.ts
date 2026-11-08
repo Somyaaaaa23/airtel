@@ -59,6 +59,13 @@ export interface Profile {
   /** Registry status when the owner gave a GSTIN; drives the "your GSTIN is cancelled" note. */
   gstinStatus?: "Active" | "Cancelled" | "Suspended" | "NotFound";
   monthlySpend?: number;
+  /** GSTIN the owner typed in the advisor and the registry legal name, so KYC can check the certificate is the same one. */
+  gstin?: string;
+  legalName?: string;
+  /** State of the city the owner named (undefined for "other city"). */
+  state?: string;
+  /** What they use for internet today (advisor chip key, e.g. "net_hotspot"). */
+  currentInternet?: string;
   needs: Need[];
   speedPref: SpeedPref;
   /** Optional quantities the owner told us. */
@@ -108,7 +115,8 @@ export interface Note {
 }
 
 export interface Plan {
-  key: "recommended" | "starter";
+  /** starter = Essential (cheapest that meets the needs), pro = recommended with every add-on. */
+  key: "recommended" | "starter" | "pro";
   items: LineItem[];
 }
 

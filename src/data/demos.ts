@@ -28,8 +28,34 @@ export const DEMOS: Demo[] = [
     text: "General store in Bengaluru, 4 staff, 1 shop, GSTIN 29OKAXP4077P1ZL. Want SMS offers, WhatsApp and internet",
   },
   {
+    id: "insurance", title: "Insurance agency in Visakhapatnam: full journey",
+    shows: "GSTIN matches specimen K09, so KYC, e-sign, payment and the tracker all go through.",
+    text: "Insurance agency in Visakhapatnam, 6 staff, 1 office, GSTIN 37LDYXK0296F1ZB. Need internet, email and antivirus. We spend ₹4000 a month. Pincode 530017",
+  },
+  {
+    id: "furniture", title: "Furniture workshop in Nagpur: full journey",
+    shows: "GSTIN matches specimen K03; CCTV and machine monitoring need a site visit.",
+    text: "Furniture workshop in Nagpur, 15 staff, 1 site, GSTIN 27XUIXG0767D1ZP. Need internet, CCTV with 4 cameras and machine monitoring for 10 machines. We spend ₹6000 a month. Pincode 440001",
+  },
+  {
     id: "hindi", title: "हिंदी में: इंदौर की दवा की दुकान",
     shows: "Typed in Hindi with Hindi digits; switch the app to हि to reply in Hindi.",
     text: "मेरी दवा की दुकान है इंदौर में, ५ कर्मचारी, GST नहीं है, इंटरनेट और सीसीटीवी कैमरा चाहिए",
   },
+];
+
+/** The hackathon pack's 12 KYC applicants and what each one shows in Smart KYC. */
+export const KYC_DEMOS: { id: string; shows: string }[] = [
+  { id: "K01", shows: "GSTIN is cancelled in the registry and the Udyam number is missing from the certificate." },
+  { id: "K02", shows: "Tilted photo; OCR reads an O as 0 in the GSTIN, and the checksum fixes it. Passes." },
+  { id: "K03", shows: "Clean manufacturer file. Passes." },
+  { id: "K04", shows: "Blurred GST certificate: asked to retake the photo." },
+  { id: "K05", shows: "LLP signed by someone who isn't a partner: order allowed, team asks for a letter." },
+  { id: "K06", shows: "GSTIN differs from the registry by one digit; the real record is suggested." },
+  { id: "K07", shows: "Legal name on the GST certificate doesn't match the registry." },
+  { id: "K08", shows: "OCR O/0 slip in the GSTIN, fixed by the checksum. Passes." },
+  { id: "K09", shows: "Clean proprietorship. Passes." },
+  { id: "K10", shows: "LLP 'owner' without partner status: goes to review." },
+  { id: "K11", shows: "Electricity bill is 8 months old (limit 90 days)." },
+  { id: "K12", shows: "Clean proprietorship. Passes." },
 ];
