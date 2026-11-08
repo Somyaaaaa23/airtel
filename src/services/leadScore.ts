@@ -10,8 +10,16 @@ const SEGMENT: Record<Segment, string> = {
   micro: "Micro retail & services", prof: "Professional offices", multi: "Small multi-site businesses", mfg: "Small manufacturers",
 };
 const INTERNET: Record<string, string> = {
-  net_hotspot: "Mobile hotspot", net_home: "Home broadband", net_business: "Business broadband", net_leased: "Leased line", net_none: "None",
+  net_hotspot: "Mobile hotspot", net_dongle: "Mobile hotspot", net_home: "Home broadband", net_cable: "Home broadband",
+  net_business: "Business broadband", net_leased: "Leased line", net_none: "None",
 };
+
+/** One connection maps to its category; more than one is what the data calls "Mixed per site". */
+function internetCategory(answers: string[] = []) {
+  const known = [...new Set(answers.map((a) => INTERNET[a]).filter((c) => c && c !== "None"))];
+  if (known.length > 1) return "Mixed per site";
+  return known[0] ?? (answers.some((a) => a.startsWith("other:")) ? "Mobile hotspot" : "None");
+}
 
 export function leadFromProfile(p: Profile, extra: { lang: "en" | "hi"; hasUdyam: boolean }): LeadFeatures {
   return {
@@ -24,7 +32,7 @@ export function leadFromProfile(p: Profile, extra: { lang: "en" | "hi"; hasUdyam
     turnover: "",
     hasGstin: p.hasActiveGstin,
     hasUdyam: extra.hasUdyam,
-    internet: INTERNET[p.currentInternet ?? ""] ?? "None",
+    internet: internetCategory(p.currentInternet),
     spend: p.monthlySpend ?? 0,
     interests: p.needs.length,
     role: "Owner",

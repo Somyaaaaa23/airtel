@@ -4,6 +4,8 @@ import { product } from "../engine/catalogue";
 import { checkDependency, dependentsOf } from "../engine/eligibility";
 import { computeQuote } from "../engine/quote";
 import { defaultPlan } from "../engine/recommend";
+import { smartPrice, unitOffer } from "../engine/pricing";
+import { Peers, SegmentHero, SegmentInsight, SmartPriceCard } from "../components/segment";
 import type { LineItem, Plan, Profile, Recommendation } from "../engine/types";
 import { inr, t, type Lang } from "../i18n/strings";
 
@@ -30,6 +32,7 @@ export function Quote({ lang, profile, rec, onKyc, onExpert }: {
   const active = rows.filter((r) => r.on);
   const activeIds = active.map((r) => r.productId);
   const quote = useMemo(() => computeQuote(active), [rows]); // eslint-disable-line react-hooks/exhaustive-deps
+  const sp = useMemo(() => smartPrice(active, profile), [rows]); // eslint-disable-line react-hooks/exhaustive-deps
   const result: QuoteResult = { items: active.map(({ productId, qty }) => ({ productId, qty })), profile };
 
   const switchPlan = (key: Plan["key"]) => { setPlanKey(key); setRows(rowsFor(key)); setConfirmFor(null); };
@@ -43,7 +46,7 @@ export function Quote({ lang, profile, rec, onKyc, onExpert }: {
   const gstNeededBy = activeIds.filter((id) => product(id).requiresGstin);
   const TIER_ORDER: Plan["key"][] = ["starter", "recommended", "pro"];
   const planTotals = [...rec.plans].sort((a, b) => TIER_ORDER.indexOf(a.key) - TIER_ORDER.indexOf(b.key))
-    .map((p) => ({ key: p.key, monthly: computeQuote(p.items).monthly }));
+    .map((p) => { const x = smartPrice(p.items, profile); return { key: p.key, monthly: x.monthly, saving: x.savingPct, count: p.items.length }; });
   const traceRows: { id: string; kind: "in" | "opt" | "out"; why?: string }[] = [
     ...rows.map((r) => ({ id: r.productId, kind: r.optional ? ("opt" as const) : ("in" as const) })),
     ...rec.blocked.map((b) => ({ id: b.productId, kind: "out" as const, why: b.blocks.map((x) => blockText(x, lang)).join("; ") })),
@@ -62,8 +65,8 @@ export function Quote({ lang, profile, rec, onKyc, onExpert }: {
           <span className={`why ${r.optional ? "addon" : ""}`} id={`why-${r.productId}`}>{depBlock ? blockText(depBlock, lang) : reasonText(r.reason, lang)}</span>
         </label>
         <div className="price">
-          <span className="num">{inr(p.price * r.qty)}</span>
-          <small className="num">{r.qty > 1 ? `${r.qty} × ${inr(p.price)}` : `${inr(p.price)} ${unitLabel(p.id, lang)}`}</small>
+          <span className="num">{unitOffer(p.id, profile) < p.priceMax && <s className="was">{inr(p.priceMax * r.qty)}</s>}{inr(unitOffer(p.id, profile) * r.qty)}</span>
+          <small className="num">{r.qty > 1 ? `${r.qty} × ${inr(unitOffer(p.id, profile))}` : `${inr(unitOffer(p.id, profile))} ${unitLabel(p.id, lang)}`}</small>
           {PER_SITE.has(p.unit) ? (
             r.qty > 1 && <div className="fixedqty">{unitLabel(p.id, lang)}</div>
           ) : (
@@ -90,16 +93,19 @@ export function Quote({ lang, profile, rec, onKyc, onExpert }: {
   return (
     <>
       <main className="scroll" lang={lang}>
+        <SegmentHero segment={profile.segment} lang={lang} />
         {rec.plans.length > 1 && (
-          <div className="tabs" role="tablist">
+          <div className="tiers" role="tablist">
             {planTotals.map((p) => (
-              <button key={p.key} role="tab" aria-selected={planKey === p.key} onClick={() => switchPlan(p.key)}>
-                {t(lang, p.key === "recommended" ? "plan_recommended" : p.key === "pro" ? "plan_pro" : "plan_starter")}
-                <small>{inr(p.monthly)}{t(lang, "perMonth")}</small>
+              <button key={p.key} role="tab" className="tier" aria-selected={planKey === p.key} onClick={() => switchPlan(p.key)}>
+                <span>{t(lang, p.key === "recommended" ? "plan_recommended" : p.key === "pro" ? "plan_pro" : "plan_starter")}</span>
+                <b className="num">{inr(p.monthly)}</b>
+                <small>{t(lang, "tier_items", { n: p.count })} · −{p.saving}%</small>
               </button>
             ))}
           </div>
         )}
+        <SmartPriceCard sp={sp} profile={profile} lang={lang} />
         {initialPlan === "starter" && planKey === "starter" && profile.monthlySpend
           ? <div className="notice info">{t(lang, "budgetNote", { cur: inr(profile.monthlySpend) })}</div> : null}
         {rec.notes.map((n, i) => <div key={i} className="notice info">{noteText(n, lang)}</div>)}
@@ -120,10 +126,12 @@ export function Quote({ lang, profile, rec, onKyc, onExpert }: {
         )}
 
         <div className="facts">
-          <div className="fact"><span>{t(lang, "setup")}</span><b className="num">{quote.setup ? inr(quote.setup) : t(lang, "noSetup")}</b></div>
-          <div className="fact"><span>{t(lang, "contract", { n: quote.contractMonths })}</span><b>{t(lang, "goLive", { n: quote.goLiveDays })}</b></div>
+          <div className="fact"><span>{t(lang, "setup")}</span><b className="num">{sp.setupFull ? <>{sp.setupPayable < sp.setupFull && <s>{inr(sp.setupFull)}</s>} {inr(sp.setupPayable)}</> : t(lang, "noSetup")}</b></div>
+          <div className="fact"><span>{t(lang, "contract", { n: quote.contractMonths })}</span><b>{t(lang, "goLive", { n: sp.goLiveDays })}</b></div>
         </div>
         {profile.monthlySpend ? <p className="fine" style={{ margin: 0 }}>{t(lang, "vsSpend", { cur: inr(profile.monthlySpend) })} {t(lang, "oneBill")}</p> : null}
+        <SegmentInsight profile={profile} sp={sp} items={activeIds} lang={lang} />
+        <Peers segment={profile.segment} lang={lang} />
 
         <section className="docs">
           <h3>{t(lang, "docsTitle")}</h3>
@@ -151,11 +159,11 @@ export function Quote({ lang, profile, rec, onKyc, onExpert }: {
       <footer className="footer" lang={lang}>
         <div className="sum">
           <div>
-            <div className="fine">{t(lang, "monthly")}</div>
-            <div className="big num">{inr(quote.monthly)}<small>{t(lang, "perMonth")}</small></div>
+            <div className="fine">{t(lang, "sp_your")} · <s className="num">{inr(sp.standard)}</s></div>
+            <div className="big num">{inr(sp.monthly)}<small>{t(lang, "perMonth")}</small></div>
           </div>
           <div className="side">
-            <div>{quote.setup ? `+ ${inr(quote.setup)} ${t(lang, "setup").toLowerCase()}` : t(lang, "noSetup")}</div>
+            <div>{t(lang, "dueToday")}: <b className="num">{inr(sp.firstPayment)}</b></div>
             <div>{t(lang, "contract", { n: quote.contractMonths })}</div>
           </div>
         </div>

@@ -64,8 +64,8 @@ export interface Profile {
   legalName?: string;
   /** State of the city the owner named (undefined for "other city"). */
   state?: string;
-  /** What they use for internet today (advisor chip key, e.g. "net_hotspot"). */
-  currentInternet?: string;
+  /** What they use for internet today: advisor chip keys (e.g. "net_hotspot") and "other:<text>" answers. */
+  currentInternet?: string[];
   needs: Need[];
   speedPref: SpeedPref;
   /** Optional quantities the owner told us. */

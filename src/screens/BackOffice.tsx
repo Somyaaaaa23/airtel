@@ -11,6 +11,17 @@ import { goLiveDay, planTasks, type Order } from "../engine/orders";
 import { fmtDate, inr } from "../i18n/strings";
 import { loadOrders } from "../services/orders";
 import { CallNext, ConsentPanel, HeatTag, KycReview } from "./BackOfficeQueues";
+import { LeakFinder, Overview, Segments, Simulator } from "./CommandCentre";
+
+type Tab = "overview" | "segments" | "leaks" | "simulator" | "ops" | "model";
+const TABS: { id: Tab; label: string; sub: string; icon: string }[] = [
+  { id: "overview", label: "Overview", sub: "The quarter at a glance and where leads are lost", icon: "M3 12l9-8 9 8M5 10v10h14V10" },
+  { id: "segments", label: "Segments", sub: "Why each segment lags, and what its playbook does about it", icon: "M12 3v9h9A9 9 0 1 1 12 3zM15 3.5A9 9 0 0 1 20.5 9H15z" },
+  { id: "leaks", label: "Leak finder", sub: "The biggest fixable leaks, in ₹ per month", icon: "M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z" },
+  { id: "simulator", label: "Simulator", sub: "What happens to activations and cost if we fix each leak", icon: "M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0M14 4v4M8 10v4M16 16v4" },
+  { id: "ops", label: "Operations", sub: "Call list, KYC reviews, applications and consent", icon: "M4 5h16v14H4zM4 10h16M9 5v14" },
+  { id: "model", label: "Lead scoring", sub: "The propensity model, its back-test and why leads drop", icon: "M4 20V10M10 20V4M16 20v-7M22 20H2" },
+];
 
 const FIX_LABEL: Record<string, string> = {
   advisor: "Self-serve advisor: no visit needed",
@@ -48,26 +59,47 @@ function Bars({ rows, max, unit = "", label }: { rows: { name: string; value: nu
   );
 }
 
-export function BackOffice({ onExit }: { onExit: () => void }) {
+export function BackOffice({ admin, onSignOut }: { admin: string; onSignOut: () => void }) {
   const [orders, setOrders] = useState(loadOrders);
   const [showAllDrops, setShowAllDrops] = useState(false);
+  const [tab, setTab] = useState<Tab>("overview");
+  const openLeads = orders.filter((o) => o.kycStatus === "review").length;
   const k = bo.kpis;
   const fixable = bo.drops.filter((d) => d.fixedBy).reduce((s, d) => s + d.count, 0);
   const totalDrops = bo.drops.reduce((s, d) => s + d.count, 0);
   const drops = showAllDrops ? bo.drops : bo.drops.slice(0, 8);
+  const current = TABS.find((x) => x.id === tab)!;
 
   return (
-    <div className="bo">
+    <div className="bo bo-layout">
+      <aside className="bo-side">
+        <div className="mark"><i aria-hidden="true">U</i><span>Udyam Digital<small>Command centre</small></span></div>
+        <nav className="bo-nav" aria-label="Command centre">
+          {TABS.map((x) => (
+            <button key={x.id} aria-current={tab === x.id ? "page" : undefined} onClick={() => { setTab(x.id); window.scrollTo(0, 0); }}>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={x.icon} /></svg>
+              <span>{x.label}</span>
+              {x.id === "ops" && openLeads ? <span className="badge-n">{openLeads}</span> : null}
+            </button>
+          ))}
+        </nav>
+        <div className="bo-who">
+          <span className="fine">Signed in as</span>
+          <b>{admin}</b>
+          <button className="secondary" onClick={onSignOut}>Sign out</button>
+        </div>
+      </aside>
+
+      <div className="bo-main">
       <header className="bo-head">
         <div>
-          <span className="eyebrow">Accel Business · Back office</span>
-          <h1>Udyam Digital pipeline</h1>
-          <p className="fine">{bo.source}</p>
+          <span className="eyebrow">Accel Business · Command centre</span>
+          <h1>{current.label}</h1>
+          <p className="fine">{current.sub}</p>
         </div>
-        <button className="secondary" onClick={onExit}>← Owner app</button>
       </header>
 
-      <section className="kpis" aria-label="Last quarter">
+      {tab === "overview" && <section className="kpis" aria-label="Last quarter">
         {[
           ["Leads", k.leads.toLocaleString("en-IN"), "Apr–Jun 2026"],
           ["Activated", pct(k.activationRate), `${k.activated} businesses`],
@@ -75,12 +107,17 @@ export function BackOffice({ onExit }: { onExit: () => void }) {
           ["Chasing calls", String(k.avgFollowUps), "per activated customer"],
           ["Cost per activation", inr(k.costPerActivation), "sales + partner cost"],
           ["Monthly value", inr(k.avgMonthlyValue), `NPS ${k.avgNps} · churn ${pct(k.churn6m)}`],
-        ].map(([l, v, s]) => (
-          <div key={l} className="kpi"><span>{l}</span><b className="num">{v}</b><small>{s}</small></div>
+        ].map(([l, v, sub]) => (
+          <div key={l} className="kpi"><span>{l}</span><b className="num">{v}</b><small>{sub}</small></div>
         ))}
-      </section>
+      </section>}
 
-      <div className="bo-grid">
+      {tab === "overview" && <Overview />}
+      {tab === "segments" && <Segments />}
+      {tab === "leaks" && <LeakFinder />}
+      {tab === "simulator" && <Simulator />}
+
+      {tab === "ops" && <div className="bo-grid">
         <CallNext />
         <KycReview orders={orders} onChange={() => setOrders(loadOrders())} />
         <section className="panel wide">
@@ -113,14 +150,10 @@ export function BackOffice({ onExit }: { onExit: () => void }) {
             </div>
           )}
         </section>
+        <ConsentPanel />
+      </div>}
 
-        <section className="panel">
-          <h2>Funnel</h2>
-          <p className="fine">Leads reaching each stage; % of the stage before.</p>
-          <Bars label="Funnel" max={bo.funnel[0].count} rows={bo.funnel.map((f, i) => ({
-            name: f.stage, value: f.count, note: i ? pct((f.count / bo.funnel[i - 1].count) * 100) : undefined,
-          }))} />
-        </section>
+      {tab === "model" && <div className="bo-grid">
 
         <section className="panel">
           <h2>Propensity model</h2>
@@ -188,7 +221,6 @@ export function BackOffice({ onExit }: { onExit: () => void }) {
           </div>
         </section>
 
-        <ConsentPanel />
         <section className="panel">
           <h2>Back-test: held-out leads by score</h2>
           <p className="fine">Top 8 and bottom 4 scores, with what actually happened.</p>
@@ -208,8 +240,9 @@ export function BackOffice({ onExit }: { onExit: () => void }) {
             </table>
           </div>
         </section>
+      </div>}
+      <p className="fine bo-foot">Data source: {bo.source}. Identifiers in staff views are masked, e.g. {maskId("27QHJXK0658U1ZL")}. Orders are kept in this browser only for the prototype.</p>
       </div>
-      <p className="fine bo-foot">Identifiers in staff views are masked, e.g. {maskId("27QHJXK0658U1ZL")}. Orders are kept in this browser only for the prototype.</p>
     </div>
   );
 }

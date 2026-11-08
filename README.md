@@ -3,27 +3,48 @@
 Phone-first journey for small businesses to find, price and buy an Accel Business bundle without a sales visit.
 Built for Airtel SYNC 2026, Track A. All data is the hackathon's synthetic pack.
 
-**Journey:** welcome + OTP → name → AI advisor chat (English / Hindi) or "I just need a SIM" → quote with
+**What makes it different:** the four SMB segments fail for different reasons (see `docs/deliverables.md`), so each gets its
+own playbook. Micro retail (54% of leads, 4.1% convert, ₹20,000 to win a ₹2,470/month customer) gets a fully online
+journey, ₹-per-day pricing, setup waived and first month at half price. Professional offices get launch pricing and a data-safety
+check. Multi-site gets a relationship manager, per-site volume discount and a consolidation view. Manufacturers (best
+converters, slowest go-live) get a priority install crew and a downtime-cost calculator. Every quote shows the **standard
+rate struck through, your price, and the saving**, never below Accel's lowest published price (`src/engine/pricing.ts`).
+The **command centre** reproduces the problem slide live from the data and adds a segment deep-dive with automatic
+"why we're lacking" findings, a leak map with revenue at stake, and a what-if simulator (`src/engine/diagnose.ts`).
+
+Look: coral page (#FB6A4A), deep-coral panels with white text, cream headline accents, white buttons; Playfair Display headlines, Times New Roman text, Arial controls.
+
+**Journey:** start page (Business owner or Accel team) → mobile + OTP → name → **My Accel dashboard** → AI advisor chat
+(English / Hindi) or "I just need a SIM" → quote with
 Essential / Recommended / Pro → **DPDP consent** → **Smart KYC** (OCR + registry checks, linked to the application) →
-**contract e-sign** → **first payment** → **order tracker**. Staff get a **back office** with a call-next list,
-a KYC review queue and an activation propensity score.
+**contract e-sign** → **first payment** → **order tracker**. Staff sign in with email and password to a **command centre**
+with segment analysis, a leak finder, a simulator, a call-next list, a KYC review queue and an activation propensity score.
 
 Submission material: `docs/deliverables.md` (checklist and demo script), `docs/architecture.md`, `docs/privacy-note.md`.
 
-Look: light-pink-to-deep-pink background, white / grey-white text, Playfair Display headings, Times New Roman body text,
-Arial for buttons, labels and numbers.
 
 ## Run it
 
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 55 tests: catalogue rules, plan tiers, advisor flow, Hindi/English parsing, GSTIN checksum, KYC, orders, propensity
+npm test             # 65 tests: catalogue rules, plan tiers, advisor flow, Hindi/English parsing, GSTIN checksum, KYC, orders, propensity
 npm run build        # production build in dist/
 npm run build:demo   # single self-contained HTML in dist-demo/ (used for the shareable demo link)
 npm run build:backoffice   # retrain the propensity model and rebuild src/data/backoffice.json from smb_leads.csv
 npm run ocr:specimens      # macOS only: re-run Apple Vision OCR on the KYC specimen images → src/data/kyc_ocr.json
 ```
+
+### Signing in
+
+The app opens on a start page that asks who is signing in.
+
+| Who | How to sign in | Lands on |
+| --- | --- | --- |
+| Business owner | Any valid Indian mobile number, then any 6 digits as the OTP (until Twilio is connected), then your name | **My Accel** dashboard: this month's data, calls and SMS (sample figures), services by channel, latest order and next bill, plus "Find my plan" and "I just need a SIM" |
+| Accel team | Email `administrator123@udyamdigital.in` (or just `administrator123`), password `123@123` | Command centre with a sidebar: Overview, Segments, Leak finder, Simulator, Operations, Lead scoring |
+
+The staff account is a prototype check in the browser (`src/services/admin.ts`), not real security; production would use Accel's single sign-on.
 
 ## How it works
 
@@ -138,7 +159,25 @@ Go-live matches the quote's estimate. Products slower than 21 days (leased lines
 delayed beyond 21 days" is a drop reason. Every step adds a WhatsApp-style update, because activated customers made 3
 chasing calls on average. Demo buttons step through the days.
 
-## Back office (`src/screens/BackOffice.tsx`, staff view, English)
+## Segment playbooks and smart price
+
+| Segment | Leak in the data | Route | Price framing | Offer |
+| --- | --- | --- | --- | --- |
+| Micro retail | Needs → quote 32%; bundle 2.7× spend; payback 8 months | Fully online | ₹ per day | Setup waived, first month half price |
+| Professional offices | Owners without GSTIN clear KYC only 27% | Online + specialist call | ₹ per staff member | Launch price (bottom of range) for 3 months, half setup |
+| Multi-site | Highest value (₹28,080/mo); install delays over-index | Relationship manager | ₹ per site | 2% per extra site (max 10%), half setup |
+| Manufacturers | KYC → live only 54%; 20.5 days to live | Priority install crew | Downtime cost | Setup waived, installs 30% faster |
+
+Standard rate = top of the published range; bundle price = midpoint (what activated customers paid); offers never go below the minimum.
+
+## Command centre (`src/screens/BackOffice.tsx`, `CommandCentre.tsx`, staff view, English)
+
+Sidebar sections: **Overview** (42% lost to our own process, loss split, segment bubble chart, funnel, segment table) ·
+**Segments** (automatic findings with fixes, KPIs, KYC clearance with / without GSTIN, funnel vs all, drop reasons with lift
+and ₹ at stake, playbook) · **Leak finder** (segment × step heat map, top leaks in ₹/month) · **Simulator** (drag how much
+each fix recovers; activations, rate, cost per activation and revenue update by segment) · **Operations** · **Lead scoring**.
+
+### Operations and lead scoring
 
 Built from `smb_leads.csv` by `scripts/build_backoffice.ts`:
 - quarter KPIs, funnel with stage conversion, channel economics
@@ -165,6 +204,8 @@ The demo panel (right side on desktop, ✦ button on phones) sends a typed messa
 | Packaging unit, no fibre (PIN 800006) | Leased line impossible → AirFiber; Static IP and Firewall blocked; Endpoint Security substituted |
 | General store, cancelled GSTIN | Registry status blocks GST-only products |
 | Hindi message from an Indore pharmacy | Devanagari text and digits understood |
+| Insurance agency in Visakhapatnam: full journey | GSTIN matches specimen K09, so KYC, e-sign, payment and the tracker all go through |
+| Furniture workshop in Nagpur: full journey | Manufacturer playbook: setup waived, priority install crew; GSTIN matches specimen K03 |
 
 ## Code map
 
@@ -173,7 +214,8 @@ src/engine/      catalogue, eligibility, recommender, quote, GSTIN checksum, KYC
 src/services/    free-text parser, mock GSTIN/Udyam/feasibility/OCR APIs, order store, lead scoring
 src/advisor/     conversation flow (which question next) and explanation text
 src/i18n/        all English and Hindi copy
-src/screens/     Welcome, Advisor, SIM path, Quote, Consent, Smart KYC, Contract, Payment, Tracker, Privacy, back office
+src/screens/     Start, owner sign-in (Welcome), My Accel dashboard, Advisor, SIM path, Quote, Consent, Smart KYC, Contract,
+                 Payment, Tracker, Privacy, staff sign-in, command centre
 src/data/        hackathon CSVs, OCR output, back-office summary + model, city tiers, business types, demo scripts
 public/kyc/      the 47 KYC specimen images (shown as thumbnails)
 scripts/         OCR (Swift / Apple Vision) and back-office model builder

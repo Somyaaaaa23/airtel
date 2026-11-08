@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { blockText, businessLabel, needLabel, noteText, pName, summarise } from "../advisor/explain";
 import {
-  ALL_NEEDS, COUNT_CHIPS, EMPLOYEE_CHIPS, INTERNET_CHIPS, mergeExtracted, NEED_ORDER, nextStep, segmentOf,
+  ALL_NEEDS, COUNT_CHIPS, EMPLOYEE_CHIPS, INTERNET_CHIPS, mergeExtracted, NEED_ORDER, NET_NONE, nextStep, OTHER_PREFIX, segmentOf,
   SITE_CHIPS, SPEED_CHIPS, SPEND_CHIPS, toProfile, type Draft, type Step,
 } from "../advisor/flow";
 import { BUSINESS_TYPES, CITIES, QUICK_TYPES } from "../data/reference";
@@ -14,6 +14,8 @@ import { checkFeasibility, isValidPincode } from "../services/feasibility";
 import { extract } from "../services/nlu";
 import { lookupGstin } from "../services/registry";
 import { IconSend } from "../components/ui";
+import { SegmentHero } from "../components/segment";
+import { smartPrice } from "../engine/pricing";
 
 type Render = (lang: Lang) => string;
 interface Msg { id: number; from: "bot" | "user"; render: Render; tone?: "ok" | "warn"; rec?: { profile: Profile; rec: Recommendation } }
@@ -33,6 +35,9 @@ export function Advisor({ lang, initialText, onQuote }: { lang: Lang; initialTex
   const [busy, setBusy] = useState(false);
   const [picked, setPicked] = useState<Need[]>([]);
   const [moreNeeds, setMoreNeeds] = useState(false);
+  const [nets, setNets] = useState<string[]>([]);
+  const [otherOpen, setOtherOpen] = useState(false);
+  const [otherText, setOtherText] = useState("");
   const idRef = useRef(0);
   const asked = useRef<string>("");
   const chatRef = useRef<HTMLDivElement>(null);
@@ -49,6 +54,7 @@ export function Advisor({ lang, initialText, onQuote }: { lang: Lang; initialTex
     if (busy || asked.current === step) return;
     asked.current = step;
     if (step === "needs") { setPicked(draft.preNeeds); setMoreNeeds(false); }
+    if (step === "internet") { setNets([]); setOtherOpen(false); setOtherText(""); }
     if (step === "pincode" && draft.pincode) { void runPincode(draft.pincode); return; }
     if (step === "done") {
       const profile = toProfile(draft);
@@ -102,6 +108,8 @@ export function Advisor({ lang, initialText, onQuote }: { lang: Lang; initialTex
   async function handleText(raw: string) {
     const text = raw.trim();
     if (!text || busy) return;
+    // On the internet question, typed text is one more "Other" answer; Done sends them all.
+    if (nextStep(draft) === "internet") { addOther(text); setInput(""); return; }
     user(text);
     setInput("");
     const cur = nextStep(draft);
@@ -163,7 +171,6 @@ export function Advisor({ lang, initialText, onQuote }: { lang: Lang; initialTex
         ];
       case "gstin_type":
         return [{ key: "none", label: t(lang, "gst_none"), act: () => choose(L("gst_none"), { gst: "none" }, () => bot("r_no_gst")) }];
-      case "internet": return INTERNET_CHIPS.map((k) => ({ key: k, label: t(lang, k), act: () => choose(L(k), { currentInternet: k }) }));
       case "spend": return SPEND_CHIPS.map(([label, v]) => ({ key: label, label, act: () => choose(label, { monthlySpend: v }) }));
       case "speed": return SPEED_CHIPS.map((s: SpeedPref) => ({ key: s, label: t(lang, `speed_${s}` as Key), act: () => choose(L(`speed_${s}` as Key), { speedPref: s }) }));
       case "lines": case "cameras": case "vehicles": case "machines":
@@ -172,6 +179,22 @@ export function Advisor({ lang, initialText, onQuote }: { lang: Lang; initialTex
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step, lang, busy]);
+
+  const netLabel = (k: string, l: Lang) => (k.startsWith(OTHER_PREFIX) ? k.slice(OTHER_PREFIX.length) : t(l, k as Key));
+  const toggleNet = (k: string) => setNets((n) => {
+    if (n.includes(k)) return n.filter((x) => x !== k);
+    return k === NET_NONE ? [NET_NONE] : [...n.filter((x) => x !== NET_NONE), k];
+  });
+  function addOther(text: string) {
+    const v = text.trim().replace(/\s+/g, " ").slice(0, 60);
+    if (v) setNets((n) => [...new Set([...n.filter((x) => x !== NET_NONE), OTHER_PREFIX + v])]);
+    setOtherText("");
+    setOtherOpen(false);
+  }
+  const confirmNets = () => {
+    const chosen = nets;
+    choose((l) => chosen.map((k) => netLabel(k, l)).join(", "), { currentInternet: chosen });
+  };
 
   const needList = moreNeeds ? [...NEED_ORDER[segment], ...ALL_NEEDS.filter((n) => !NEED_ORDER[segment].includes(n))] : NEED_ORDER[segment];
   const needsVisible = [...needList, ...picked.filter((p) => !needList.includes(p))];
@@ -182,6 +205,19 @@ export function Advisor({ lang, initialText, onQuote }: { lang: Lang; initialTex
 
   return (
     <>
+      {draft.businessTypeId && (
+        <div className="profile-strip" lang={lang}>
+          <SegmentHero segment={segment} lang={lang} compact />
+          <div className="facts-strip" aria-label={t(lang, "building")}>
+            {draft.city && <span>{lang === "hi" ? CITIES.find((c) => c.city === draft.city)?.hi ?? draft.city : draft.city}</span>}
+            {draft.employees !== undefined && <span>{t(lang, "people", { n: draft.employees })}</span>}
+            {draft.sites !== undefined && <span>{draft.sites === 1 ? t(lang, "site_1") : t(lang, "sites_n", { n: draft.sites })}</span>}
+            {draft.gst && draft.gst !== "awaiting" && <span>{draft.gst === "Active" || draft.gst === "later" ? t(lang, "hasGst") : t(lang, "noGst")}</span>}
+            {draft.monthlySpend !== undefined && <span className="num">{inr(draft.monthlySpend)}{t(lang, "perMonth")}</span>}
+            {(draft.needs ?? draft.preNeeds).length > 0 && <span>{(draft.needs ?? draft.preNeeds).length} ✓</span>}
+          </div>
+        </div>
+      )}
       <div className="chat" ref={chatRef} aria-live="polite" lang={lang}>
         {msgs.map((m) => m.rec ? (
           <div key={m.id} style={{ display: "contents" }}>
@@ -195,7 +231,28 @@ export function Advisor({ lang, initialText, onQuote }: { lang: Lang; initialTex
       </div>
       {step !== "done" && (
         <div className="dock" lang={lang}>
-          {step === "needs" ? (
+          {step === "internet" ? (
+            <>
+              <div className="chips" role="group" aria-label={t(lang, "q_internet")}>
+                {INTERNET_CHIPS.map((k) => (
+                  <button key={k} className="chip" aria-pressed={nets.includes(k)} onClick={() => toggleNet(k)}>{t(lang, k)}</button>
+                ))}
+                {nets.filter((k) => k.startsWith(OTHER_PREFIX)).map((k) => (
+                  <button key={k} className="chip" aria-pressed onClick={() => toggleNet(k)} title={t(lang, "remove")}>{netLabel(k, lang)} ✕</button>
+                ))}
+                {!otherOpen && <button className="chip more" onClick={() => setOtherOpen(true)}>{t(lang, "net_other")}</button>}
+              </div>
+              {otherOpen && (
+                <div className="compose other-row">
+                  <label className="vh" htmlFor="net-other">{t(lang, "net_other_ph")}</label>
+                  <input id="net-other" className="input" autoFocus value={otherText} placeholder={t(lang, "net_other_ph")}
+                    onChange={(e) => setOtherText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addOther(otherText); } }} />
+                  <button className="chip" onClick={() => addOther(otherText)} disabled={!otherText.trim()}>{t(lang, "net_add")}</button>
+                </div>
+              )}
+              <button className="primary" disabled={!nets.length || busy} onClick={confirmNets}>{t(lang, "done")}{nets.length ? ` · ${nets.length}` : ""}</button>
+            </>
+          ) : step === "needs" ? (
             <>
               <div className="chips" role="group" aria-label={t(lang, "q_needs")}>
                 {needsVisible.map((n) => (
@@ -224,6 +281,7 @@ function RecCard({ lang, profile, rec, onQuote }: { lang: Lang; profile: Profile
   const key = defaultPlan(rec, profile);
   const plan = rec.plans.find((p) => p.key === key)!;
   const q = computeQuote(plan.items);
+  const sp = smartPrice(plan.items, profile);
   return (
     <section className="rec" aria-label={t(lang, "plan_recommended")}>
       <h3>{t(lang, key === "starter" ? "plan_starter" : "plan_recommended")}</h3>
@@ -242,9 +300,10 @@ function RecCard({ lang, profile, rec, onQuote }: { lang: Lang; profile: Profile
         </div>
       )}
       <div className="total">
-        <span>{t(lang, "monthly")}{profile.monthlySpend ? <span className="fine"> · {t(lang, "vsSpend", { cur: inr(profile.monthlySpend) })}</span> : null}</span>
-        <b className="num">{inr(q.monthly)}</b>
+        <span>{t(lang, "sp_your")}</span>
+        <span className="rec-price"><s className="num">{inr(sp.standard)}</s> <b className="num">{inr(sp.monthly)}</b></span>
       </div>
+      {profile.monthlySpend ? <p className="fine" style={{ margin: 0 }}>{t(lang, "vsSpend", { cur: inr(profile.monthlySpend) })}</p> : null}
       <button className="primary" onClick={onQuote}>{t(lang, "seeQuote")}</button>
     </section>
   );

@@ -5,39 +5,47 @@ import { DEMOS } from "./data/demos";
 import { KYC_TODAY, type KycResult } from "./engine/kyc";
 import { orderId, type Order } from "./engine/orders";
 import { computeQuote } from "./engine/quote";
+import { smartPrice } from "./engine/pricing";
+import { PLAYBOOKS } from "./engine/segments";
+import { JourneyBar } from "./components/segment";
 import type { Profile, Recommendation } from "./engine/types";
 import { t, type Key, type Lang } from "./i18n/strings";
 import { Advisor } from "./screens/Advisor";
+import { AdminLogin } from "./screens/AdminLogin";
 import { BackOffice } from "./screens/BackOffice";
 import { Consent } from "./screens/Consent";
 import { Contract, type Signed } from "./screens/Contract";
+import { Dashboard } from "./screens/Dashboard";
 import { Expert } from "./screens/End";
 import { Kyc, type KycSnapshot } from "./screens/Kyc";
 import { Payment, type Paid } from "./screens/Payment";
 import { Privacy } from "./screens/Privacy";
 import { Quote, type QuoteResult } from "./screens/Quote";
 import { SimQuick } from "./screens/SimQuick";
+import { Start } from "./screens/Start";
 import { Tracker } from "./screens/Tracker";
 import { Welcome } from "./screens/Welcome";
 import { currentConsent, PURPOSES } from "./services/consent";
 import { convertLead, saveLead, type LeadStage } from "./services/leads";
 import { scoreProfile } from "./services/leadScore";
-import { findOrder, saveOrder } from "./services/orders";
+import { loadOrders, saveOrder } from "./services/orders";
 
-type Screen = "welcome" | "advisor" | "sim" | "quote" | "expert" | "consent" | "kyc" | "contract" | "payment" | "track" | "privacy" | "backoffice";
+type Screen = "start" | "adminLogin" | "dashboard" | "welcome" | "advisor" | "sim" | "quote" | "expert" | "consent" | "kyc" | "contract" | "payment" | "track" | "privacy" | "backoffice";
 
 /** Screen to return to with the back arrow. */
 const BACK: Partial<Record<Screen, Screen>> = {
-  advisor: "welcome", sim: "welcome", quote: "advisor", expert: "quote", consent: "quote", kyc: "quote", contract: "kyc", payment: "contract",
+  welcome: "start", advisor: "dashboard", sim: "dashboard", track: "dashboard", quote: "advisor", expert: "quote", consent: "quote", kyc: "quote", contract: "kyc", payment: "contract",
 };
+/** Step of the six-step journey bar each screen belongs to. */
+const JOURNEY_STEP: Partial<Record<Screen, number>> = { advisor: 0, sim: 0, quote: 1, expert: 1, consent: 2, kyc: 2, contract: 3, payment: 4, track: 5 };
 const TITLE: Partial<Record<Screen, Key>> = {
-  advisor: "advisorTitle", sim: "simTitle", quote: "quoteTitle", consent: "cs_title", kyc: "kycTitle", contract: "ctTitle",
+  dashboard: "myTitle", advisor: "advisorTitle", sim: "simTitle", quote: "quoteTitle", consent: "cs_title", kyc: "kycTitle", contract: "ctTitle",
   payment: "payTitle", track: "trackTitle", privacy: "pv_title",
 };
 
 export default function App() {
   const [lang, setLang] = useState<Lang>("en");
-  const [screen, setScreen] = useState<Screen>("welcome");
+  const [screen, setScreen] = useState<Screen>("start");
   const [phone, setPhone] = useState("9876543210");
   const [applicant, setApplicant] = useState("");
   const [fromSim, setFromSim] = useState(false);
@@ -47,10 +55,11 @@ export default function App() {
   const [kyc, setKyc] = useState<{ result: KycResult; snap: KycSnapshot } | null>(null);
   const [signed, setSigned] = useState<Signed | null>(null);
   const [order, setOrder] = useState<Order | null>(null);
-  const [privacyFrom, setPrivacyFrom] = useState<Screen>("welcome");
+  const [privacyFrom, setPrivacyFrom] = useState<Screen>("start");
+  const [admin, setAdmin] = useState<string | null>(null);
   const [sheet, setSheet] = useState(false);
 
-  const go = (s: Screen) => { setScreen(s); setSheet(false); };
+  const go = (s: Screen) => { setScreen(s); setSheet(false); window.scrollTo(0, 0); };
   const openPrivacy = () => { setPrivacyFrom(screen); go("privacy"); };
   const startDemo = (text: string) => {
     setRun((r) => ({ key: r.key + 1, text }));
@@ -58,6 +67,16 @@ export default function App() {
     go("advisor");
   };
   const restart = () => { setRun((r) => ({ key: r.key + 1, text: undefined })); setKyc(null); setSigned(null); go("advisor"); };
+  /** Back to the start page with nothing of this owner's session left in memory. */
+  const signOut = () => {
+    setApplicant(""); setRec(null); setQuote(null); setKyc(null); setSigned(null); setOrder(null);
+    setRun((r) => ({ key: r.key + 1, text: undefined })); go("start");
+  };
+  const toDashboard = (p: string, name: string) => {
+    setPhone(p); setApplicant(name);
+    setOrder(loadOrders().find((o) => o.phone === p) ?? null);
+    go("dashboard");
+  };
   const business = () => kyc?.result.businessName ?? businessLabel(quote?.profile.businessType, "en");
 
   /** Records a journey that stopped, for the back office's call list. */
@@ -77,12 +96,13 @@ export default function App() {
     if (!quote || !kyc || !signed) return;
     const q = computeQuote(quote.items);
     const p = quote.profile;
+    const sp = smartPrice(quote.items, p);
     const r = kyc.result;
     const o: Order = {
       id: orderId(KYC_TODAY, phone), placedOn: KYC_TODAY, phone,
       businessName: business(), signatory: r.signatory ?? applicant,
       city: r.city ?? p.city, pincode: r.pincode, items: quote.items,
-      monthly: q.monthly, setup: q.setup, contractMonths: q.contractMonths,
+      monthly: sp.monthly, setup: sp.setupPayable, contractMonths: q.contractMonths, installCut: PLAYBOOKS[p.segment].installCut,
       kycStatus: r.status === "review" ? "review" : "verified", gstVerified: r.gstVerified, udyamVerified: r.udyamVerified,
       kyc: kyc.snap, contract: signed, payment, simDay: 0,
       score: scoreProfile(p, { lang, hasUdyam: r.udyamVerified }),
@@ -103,16 +123,17 @@ export default function App() {
           <b>{d.title}</b><span>{d.shows}</span>
         </button>
       ))}
-      <button className="secondary bo-link" onClick={() => go("backoffice")}>{t(lang, "backOffice")} →</button>
     </>
   );
 
-  if (screen === "backoffice") {
-    return <div className="shell bo-shell"><BackOffice onExit={() => {
-      // The back office may have approved or rejected KYC on this order.
-      if (order) setOrder(findOrder(order.id) ?? order);
-      go(order ? "track" : "welcome");
-    }} /></div>;
+  if (screen === "start") {
+    return <div className="shell start-shell"><Start lang={lang} setLang={setLang} onOwner={() => go("welcome")} onAdmin={() => go(admin ? "backoffice" : "adminLogin")} onPrivacy={openPrivacy} /></div>;
+  }
+  if (screen === "adminLogin" || (screen === "backoffice" && !admin)) {
+    return <div className="shell start-shell"><AdminLogin onBack={() => go("start")} onSignedIn={(email) => { setAdmin(email); go("backoffice"); }} /></div>;
+  }
+  if (screen === "backoffice" && admin) {
+    return <div className="shell bo-shell"><BackOffice admin={admin} onSignOut={() => { setAdmin(null); go("start"); }} /></div>;
   }
 
   const back = screen === "privacy" ? privacyFrom : screen === "quote" && fromSim ? "sim" : BACK[screen];
@@ -123,13 +144,19 @@ export default function App() {
       <div className="app">
         <Bar title={TITLE[screen] ? t(lang, TITLE[screen]!) : ""} onBack={back ? () => go(back) : undefined} backLabel={t(lang, "back")}
           right={<>
-            {(screen === "welcome" || screen === "advisor" || screen === "track") && demoBtn}
+            {(screen === "dashboard" || screen === "advisor" || screen === "track") && demoBtn}
             {screen === "advisor" && <button className="textbtn" onClick={restart}>{t(lang, "startOver")}</button>}
             <LangToggle lang={lang} setLang={setLang} />
           </>} />
+        {JOURNEY_STEP[screen] !== undefined && <JourneyBar step={JOURNEY_STEP[screen]!} lang={lang} />}
         {screen === "welcome" && (
           <Welcome lang={lang} setLang={setLang} onPrivacy={openPrivacy} onSignedIn={(p, name) => { setPhone(p); setApplicant(name); }}
-            onDone={(p, name, path) => { setPhone(p); setApplicant(name); setFromSim(path === "sim"); go(path === "sim" ? "sim" : "advisor"); }} />
+            onDone={toDashboard} />
+        )}
+        {screen === "dashboard" && (
+          <Dashboard lang={lang} name={applicant} phone={phone} order={order}
+            onFindPlan={() => { setFromSim(false); restart(); }} onSim={() => { setFromSim(true); go("sim"); }}
+            onTrack={() => go("track")} onPrivacy={openPrivacy} onSignOut={signOut} />
         )}
         {screen === "advisor" && (
           <Advisor key={run.key} lang={lang} initialText={run.text}

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Order } from "../engine/orders";
-import { computeQuote } from "../engine/quote";
+import { smartPrice } from "../engine/pricing";
 import { inr, t, type Lang } from "../i18n/strings";
 import type { QuoteResult } from "./Quote";
 
@@ -9,8 +9,8 @@ const UPI_RE = /^[\w.-]{2,}@[a-z]{2,}$/i;
 
 /** First payment (setup + first month), mocked, with retry on failure (28 leads dropped after a failed first payment). */
 export function Payment({ lang, quote, onPaid, onFailed }: { lang: Lang; quote: QuoteResult; onPaid: (p: Paid) => void; onFailed: () => void }) {
-  const q = computeQuote(quote.items);
-  const amount = q.setup + q.monthly;
+  const sp = smartPrice(quote.items, quote.profile);
+  const amount = sp.firstPayment;
   const [method, setMethod] = useState<"upi" | "card">("upi");
   const [upi, setUpi] = useState("");
   const [failNext, setFailNext] = useState(false);
@@ -32,8 +32,8 @@ export function Payment({ lang, quote, onPaid, onFailed }: { lang: Lang; quote: 
     <>
       <main className="scroll" lang={lang}>
         <section className="bill">
-          <div className="recline"><span>{t(lang, "payLineSetup")}</span><span className="num">{inr(q.setup)}</span></div>
-          <div className="recline"><span>{t(lang, "payLineMonth")}</span><span className="num">{inr(q.monthly)}</span></div>
+          <div className="recline"><span>{t(lang, "payLineSetup")}</span><span className="num">{sp.setupPayable < sp.setupFull && <s className="fine">{inr(sp.setupFull)}</s>} {inr(sp.setupPayable)}</span></div>
+          <div className="recline"><span>{t(lang, "payLineMonth")}</span><span className="num">{sp.firstMonth < sp.monthly && <s className="fine">{inr(sp.monthly)}</s>} {inr(sp.firstMonth)}</span></div>
           <div className="total"><span>{t(lang, "payTotal")}</span><b className="num">{inr(amount)}</b></div>
         </section>
         <div className="tabs" role="tablist">

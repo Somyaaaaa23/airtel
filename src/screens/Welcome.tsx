@@ -2,10 +2,8 @@ import { useState } from "react";
 import { t, type Lang } from "../i18n/strings";
 import { OTP_IS_MOCK, sendOtp, verifyOtp } from "../services/otp";
 
-export type EntryPath = "plan" | "sim";
-
 export function Welcome({ lang, setLang, onDone, onPrivacy, onSignedIn }: {
-  lang: Lang; setLang: (l: Lang) => void; onDone: (phone: string, name: string, path: EntryPath) => void; onPrivacy: () => void;
+  lang: Lang; setLang: (l: Lang) => void; onDone: (phone: string, name: string) => void; onPrivacy: () => void;
   /** Keeps the app's phone and name current, so a demo started from the side panel still uses them. */
   onSignedIn: (phone: string, name: string) => void;
 }) {
@@ -35,15 +33,17 @@ export function Welcome({ lang, setLang, onDone, onPrivacy, onSignedIn }: {
     setErr(""); setStep("name");
     onSignedIn(phone, "");
   };
-  const go = (path: EntryPath) => {
+  const go = (e: React.FormEvent) => {
+    e.preventDefault();
     if (name.trim().split(/\s+/).join(" ").length < 3) return setErr(t(lang, "nameError"));
-    onDone(phone, name.trim().replace(/\s+/g, " "), path);
+    onDone(phone, name.trim().replace(/\s+/g, " "));
   };
 
   return (
     <main className="welcome" lang={lang}>
       <div className="mark"><i aria-hidden="true">A</i>{t(lang, "appName")}</div>
-      <h2 className="hero">{t(lang, "tagline")}</h2>
+      <h2 className="hero">{t(lang, "heroA")}<em>{t(lang, "heroB")}</em></h2>
+      <p className="sub">{t(lang, "tagline")}</p>
       <div className="field">
         <span id="lang-l" style={{ fontWeight: 600, fontSize: 15 }}>{t(lang, "chooseLang")}</span>
         <div className="langpick" role="group" aria-labelledby="lang-l">
@@ -75,16 +75,13 @@ export function Welcome({ lang, setLang, onDone, onPrivacy, onSignedIn }: {
         </form>
       )}
       {step === "name" && (
-        <div className="field">
+        <form className="field" onSubmit={go} noValidate>
           <label htmlFor="name">{t(lang, "nameLabel")}</label>
           <input id="name" className="input" autoComplete="name" value={name} onChange={(e) => { setName(e.target.value); onSignedIn(phone, e.target.value.trim().replace(/\s+/g, " ")); }} />
           <span className="help">{t(lang, "nameHelp")}</span>
           {err && <span className="err" role="alert">{err}</span>}
-          <div className="paths">
-            <button className="path primary-path" onClick={() => go("plan")}><b>{t(lang, "pathFind")}</b><span>{t(lang, "pathFindSub")}</span></button>
-            <button className="path" onClick={() => go("sim")}><b>{t(lang, "pathSim")}</b><span>{t(lang, "pathSimSub")}</span></button>
-          </div>
-        </div>
+          <button className="primary" type="submit" style={{ marginTop: 8 }}>{t(lang, "continueBtn")}</button>
+        </form>
       )}
       <button className="textbtn privacy-link" onClick={onPrivacy}>{t(lang, "privacyLink")}</button>
     </main>

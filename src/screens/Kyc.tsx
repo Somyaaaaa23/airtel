@@ -71,6 +71,7 @@ export function Kyc({ lang, quote, applicant, onContinue, onExpert }: {
   const [draft, setDraft] = useState<Record<string, string>>({});
   const [pan, setPan] = useState("");
   const [confirmed, setConfirmed] = useState(false);
+  const [step, setStep] = useState(0);
   const urls = useRef<string[]>([]);
   useEffect(() => () => urls.current.forEach((u) => URL.revokeObjectURL(u)), []);
   const match = profile.gstin ? Object.entries(SPECIMEN_GSTIN).find(([, g]) => sameId(g, profile.gstin!))?.[0] : undefined;
@@ -118,7 +119,6 @@ export function Kyc({ lang, quote, applicant, onContinue, onExpert }: {
     return runKyc({ docs, needsGst, application: { name: applicant, gstin: profile.gstin, state: profile.state, pan: pan || undefined } }, KYC_REGISTRY);
   }, [slots, pan]); // eslint-disable-line react-hooks/exhaustive-deps
   const fails = result?.checks.filter((c) => c.status === "fail") ?? [];
-  const ordered = result ? [...result.checks].sort((a, b) => rank(a) - rank(b)) : [];
   const canGo = !!result && result.status !== "fix" && confirmed && !editing;
 
   const snapshot = (): KycSnapshot => ({
@@ -133,113 +133,198 @@ export function Kyc({ lang, quote, applicant, onContinue, onExpert }: {
       : kind === "udyam" ? t(lang, needsGst ? "dn_udyam_opt" : "dn_gst_opt")
         : t(lang, kind === "id" ? "dn_id" : "dn_address");
 
+  const docChecksFor = (kinds: DocKind[], extra: Check["code"][] = []) =>
+    result?.checks.filter((c) => (c.doc && kinds.includes(c.doc)) || extra.includes(c.code)) ?? [];
+  const stepChecks = [docChecksFor(["gst", "udyam"], ["business_proof", "pan_format"]), docChecksFor(["id"]), docChecksFor(["address"])];
+  const stepState = (i: number) => {
+    const kinds: DocKind[][] = [["gst", "udyam"], ["id"], ["address"]];
+    if (i === 3) return result ? result.status : "";
+    if (!kinds[i].some((k) => slots[k]?.status === "done") && !(i === 0 && pan)) return slots[kinds[i][0]]?.status === "error" ? "fix" : "";
+    const cs = stepChecks[i];
+    return cs.some((c) => c.status === "fail") ? "fix" : cs.some((c) => c.status === "warn") ? "review" : "verified";
+  };
+
+  const renderDoc = (kind: DocKind) => {
+    const s = slots[kind];
+    const docChecks = result?.checks.filter((c) => c.doc === kind && c.status !== "pass") ?? [];
+    const state = !s ? "empty" : s.status !== "done" ? s.status : docChecks.some((c) => c.status === "fail") ? "bad" : docChecks.length ? "warn" : "good";
+    const fields = SHOW[kind].filter((f) => editing === kind || s?.parsed?.fields[f]);
+    return (
+      <section key={kind} className={`doc ${state}`} aria-label={t(lang, `dk_${kind}` as Key)}>
+        <div className="doc-head">
+          {s?.image ? <img className="thumb" src={s.image} alt="" onError={(e) => (e.currentTarget.style.display = "none")} /> : <span className="thumb empty" aria-hidden="true">{kind === "id" ? "ID" : kind === "address" ? "₹" : kind === "gst" ? "GST" : "U"}</span>}
+          <div className="doc-title">
+            <b>{t(lang, `dk_${kind}` as Key)}</b>
+            <span className="fine">{s?.status === "reading" ? t(lang, "reading") : s ? s.name : note(kind)}</span>
+          </div>
+          <label className="upload">
+            {t(lang, s ? "replace" : "upload")}
+            <input type="file" accept="image/*" capture="environment" className="vh" onChange={(e) => { upload(kind, e.target.files?.[0]); e.target.value = ""; }} />
+          </label>
+        </div>
+        {s?.status === "error" && <p className="doc-err">{t(lang, "cantRead")}</p>}
+        {s?.parsed?.readable && (
+          <>
+            <dl className="fields">
+              {fields.map((f) => (
+                <div key={f}><dt>{t(lang, `f_${f}` as Key)}</dt><dd className={MASK.has(f) ? "num" : undefined}>
+                  {editing === kind
+                    ? <input className="input small" value={draft[f] ?? ""} onChange={(e) => setDraft((d) => ({ ...d, [f]: e.target.value }))} aria-label={t(lang, `f_${f}` as Key)} />
+                    : MASK.has(f) ? maskId(s.parsed!.fields[f]) : DATES.has(f) ? fmtDate(s.parsed!.fields[f], lang) : s.parsed!.fields[f]}
+                  {s.edited?.includes(f) && editing !== kind ? <small className="edited"> ✎</small> : null}
+                </dd></div>
+              ))}
+            </dl>
+            <div className="doc-actions">
+              {s.edited?.length ? <span className="fine">{t(lang, "editedNote")}</span> : <span />}
+              {editing === kind
+                ? <button className="textbtn" onClick={() => saveEdit(kind)}>{t(lang, "saveFields")}</button>
+                : <button className="textbtn" onClick={() => startEdit(kind)} disabled={!!editing}>{t(lang, "editFields")}</button>}
+            </div>
+          </>
+        )}
+      </section>
+    );
+  };
+
+  const checkList = (cs: Check[]) => (
+    <ul className="check-list">
+      {[...cs].sort((a, b) => rank(a) - rank(b)).map((c, i) => (
+        <li key={i} className={c.status}><span className={`tag ${c.status === "pass" ? "in" : c.status === "warn" ? "opt" : "out"}`}>{c.status === "pass" ? "✓" : c.status === "warn" ? "!" : "✕"}</span>{checkText(c, lang)}</li>
+      ))}
+    </ul>
+  );
+
+  const STEPS: Key[] = ["ks_business", "ks_id", "ks_address", "ks_review"];
+  const WHY: Key[] = ["ks_business_why", "ks_id_why", "ks_address_why", "ks_review_why"];
+  const passed = result?.checks.filter((c) => c.status === "pass").length ?? 0;
+  const total = result?.checks.length ?? 0;
+
   return (
     <>
-      <main className="scroll" lang={lang}>
-        <p className="lead">{t(lang, "kycIntro")}</p>
+      <main className="scroll kyc" lang={lang}>
+        <ol className="kyc-steps">
+          {STEPS.map((k, i) => (
+            <li key={k}>
+              <button className={`kstep ${i === step ? "now" : ""} ${stepState(i)}`} onClick={() => setStep(i)} aria-current={i === step ? "step" : undefined}>
+                <i aria-hidden="true">{stepState(i) === "verified" ? "✓" : stepState(i) === "fix" ? "!" : stepState(i) === "review" ? "•" : i + 1}</i>
+                <span>{t(lang, k)}</span>
+              </button>
+            </li>
+          ))}
+        </ol>
 
-        <section className="app-card" aria-label={t(lang, "appTitle")}>
-          <h3>{t(lang, "appTitle")}</h3>
-          {applicant && <span>{t(lang, "appSigner", { name: applicant })}</span>}
-          {profile.gstin && <span className="num">{t(lang, "appGstin", { masked: maskId(profile.gstin.toUpperCase()) })}</span>}
-          {profile.state && <span>{t(lang, "appState", { state: profile.state })}</span>}
-        </section>
-
-        <section className="specimens" aria-label={t(lang, "kycSpecimen")}>
-          <h3>{t(lang, "kycSpecimen")}</h3>
-          <p className="fine">{t(lang, "kycSpecimenHint")}</p>
+        <details className="sample">
+          <summary>{t(lang, "ks_sample")}{match ? ` · ${match} ${t(lang, "specMatch").toLowerCase()}` : ""}</summary>
           <div className="chips">
             {KYC_DEMOS.map((d) => (
-              <button key={d.id} className={`chip ${match === d.id ? "match" : ""}`} aria-pressed={specimen === d.id} onClick={() => loadSpecimen(d.id)} title={d.shows}>
-                {d.id}{match === d.id ? ` · ${t(lang, "specMatch")}` : ""}
+              <button key={d.id} className={`chip ${match === d.id ? "match" : ""}`} aria-pressed={specimen === d.id} onClick={() => { loadSpecimen(d.id); setStep(3); }} title={d.shows}>
+                {d.id}{match === d.id ? " ★" : ""}
               </button>
             ))}
           </div>
           {specimen && <p className="fine specimen-note">{specimen}: {KYC_DEMOS.find((d) => d.id === specimen)?.shows}</p>}
-        </section>
+        </details>
 
-        {DOC_KINDS.map((kind) => {
-          const s = slots[kind];
-          const docChecks = result?.checks.filter((c) => c.doc === kind && c.status !== "pass") ?? [];
-          const state = !s ? "empty" : s.status !== "done" ? s.status : docChecks.some((c) => c.status === "fail") ? "bad" : docChecks.length ? "warn" : "good";
-          const fields = SHOW[kind].filter((f) => editing === kind || s?.parsed?.fields[f]);
-          return (
-            <section key={kind} className={`doc ${state}`} aria-label={t(lang, `dk_${kind}` as Key)}>
-              <div className="doc-head">
-                {s?.image ? <img className="thumb" src={s.image} alt="" onError={(e) => (e.currentTarget.style.display = "none")} /> : <span className="thumb empty" aria-hidden="true">{kind === "id" ? "ID" : kind === "address" ? "₹" : kind === "gst" ? "GST" : "U"}</span>}
-                <div className="doc-title">
-                  <b>{t(lang, `dk_${kind}` as Key)}</b>
-                  <span className="fine">{s?.status === "reading" ? t(lang, "reading") : s ? s.name : note(kind)}</span>
-                </div>
-                <label className="upload">
-                  {t(lang, s ? "replace" : "upload")}
-                  <input type="file" accept="image/*" capture="environment" className="vh" onChange={(e) => { upload(kind, e.target.files?.[0]); e.target.value = ""; }} />
-                </label>
-              </div>
-              {s?.status === "error" && <p className="doc-err">{t(lang, "cantRead")}</p>}
-              {s?.parsed?.readable && (
-                <>
-                  <dl className="fields">
-                    {fields.map((f) => (
-                      <div key={f}><dt>{t(lang, `f_${f}` as Key)}</dt><dd className={MASK.has(f) ? "num" : undefined}>
-                        {editing === kind
-                          ? <input className="input small" value={draft[f] ?? ""} onChange={(e) => setDraft((d) => ({ ...d, [f]: e.target.value }))} aria-label={t(lang, `f_${f}` as Key)} />
-                          : MASK.has(f) ? maskId(s.parsed!.fields[f]) : DATES.has(f) ? fmtDate(s.parsed!.fields[f], lang) : s.parsed!.fields[f]}
-                        {s.edited?.includes(f) && editing !== kind ? <small className="edited"> ✎</small> : null}
-                      </dd></div>
-                    ))}
-                  </dl>
-                  <div className="doc-actions">
-                    {s.edited?.length ? <span className="fine">{t(lang, "editedNote")}</span> : <span />}
-                    {editing === kind
-                      ? <button className="textbtn" onClick={() => saveEdit(kind)}>{t(lang, "saveFields")}</button>
-                      : <button className="textbtn" onClick={() => startEdit(kind)} disabled={!!editing}>{t(lang, "editFields")}</button>}
-                  </div>
-                </>
-              )}
-              {docChecks.map((c, i) => <p key={i} className={`doc-${c.status === "fail" ? "err" : "warn"}`}>{checkText(c, lang)}</p>)}
+        <header className="step-head">
+          <span className="eyebrow">{t(lang, "ks_step", { n: step + 1 })}</span>
+          <h2>{t(lang, STEPS[step])}</h2>
+          <p>{t(lang, WHY[step])}</p>
+        </header>
+
+        {step === 0 && (
+          <>
+            {renderDoc("gst")}
+            <div className="or"><span>{t(lang, "ks_or")}</span></div>
+            {renderDoc("udyam")}
+            {!needsGst && (
+              <>
+                <div className="or"><span>{t(lang, "ks_or")}</span></div>
+                <section className="doc">
+                  <label className="field">
+                    <span className="pan-label">{t(lang, "panLabel")}</span>
+                    <input className="input num" value={pan} maxLength={10} onChange={(e) => setPan(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))} placeholder="ABCPX1234K" />
+                    <span className="help">{t(lang, "panHelp")}</span>
+                  </label>
+                </section>
+              </>
+            )}
+          </>
+        )}
+        {step === 1 && renderDoc("id")}
+        {step === 2 && renderDoc("address")}
+        {step < 3 && stepChecks[step].length > 0 && (
+          <section className="checks">
+            {stepChecks[step].every((c) => c.status === "pass") && <p className="ok-line">{t(lang, "ks_doc_ok")}</p>}
+            {checkList(stepChecks[step])}
+          </section>
+        )}
+
+        {step === 3 && (
+          <>
+            <section className="app-card" aria-label={t(lang, "appTitle")}>
+              <h3>{t(lang, "appTitle")}</h3>
+              {applicant && <span>{t(lang, "appSigner", { name: applicant })}</span>}
+              {profile.gstin && <span className="num">{t(lang, "appGstin", { masked: maskId(profile.gstin.toUpperCase()) })}</span>}
+              {profile.state && <span>{t(lang, "appState", { state: profile.state })}</span>}
             </section>
-          );
-        })}
-
-        {!needsGst && (
-          <section className="consent">
-            <label className="field">
-              <span className="pan-label">{t(lang, "panLabel")}</span>
-              <input className="input num" value={pan} maxLength={10} onChange={(e) => setPan(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))} placeholder="ABCPX1234K" />
-              <span className="help">{t(lang, "panHelp")}</span>
-            </label>
-          </section>
+            {result ? (
+              <>
+                <div className="score">
+                  <div className="ring" style={{ background: `conic-gradient(var(--cyan) ${(passed / Math.max(1, total)) * 360}deg, var(--sunk) 0)` }}><b className="num">{passed}/{total}</b></div>
+                  <p>{t(lang, "ks_score", { n: passed, total })}</p>
+                </div>
+                {GROUPS.map(([key, codes]) => {
+                  const cs = result.checks.filter((c) => codes.includes(c.code));
+                  if (!cs.length) return null;
+                  const st = cs.some((c) => c.status === "fail") ? "fix" : cs.some((c) => c.status === "warn") ? "review" : "verified";
+                  return (
+                    <section key={key} className={`group ${st}`}>
+                      <h3><span className="gdot" aria-hidden="true">{st === "verified" ? "✓" : st === "fix" ? "✕" : "!"}</span>{t(lang, key)}</h3>
+                      {checkList(cs)}
+                    </section>
+                  );
+                })}
+                {result.status === "fix" && <button className="secondary" onClick={() => onExpert(checkText(fails[0], "en"))}>{t(lang, "kycExpert")}</button>}
+              </>
+            ) : <p className="lead">{t(lang, "kyc_waiting")}</p>}
+          </>
         )}
-
-        {result && (
-          <section className="checks" aria-label={t(lang, "checksTitle")}>
-            <h3>{t(lang, "checksTitle")} <span className="fine">· {t(lang, "checksPassed", { n: result.checks.filter((c) => c.status === "pass").length, total: result.checks.length })}</span></h3>
-            <ul>
-              {ordered.map((c, i) => (
-                <li key={i} className={c.status}><span className={`tag ${c.status === "pass" ? "in" : c.status === "warn" ? "opt" : "out"}`}>{c.status === "pass" ? "✓" : c.status === "warn" ? "!" : "✕"}</span>{checkText(c, lang)}</li>
-              ))}
-            </ul>
-          </section>
-        )}
-        {result?.status === "fix" && <button className="secondary" onClick={() => onExpert(checkText(fails[0], "en"))}>{t(lang, "kycExpert")}</button>}
       </main>
       <footer className="footer" lang={lang}>
-        <p className={`kyc-status ${result?.status ?? ""}`} role="status">
-          {!result ? t(lang, "kyc_waiting") : result.status === "fix" ? t(lang, "kyc_fix", { n: fails.length }) : t(lang, result.status === "review" ? "kyc_review" : "kyc_verified")}
-        </p>
-        {result && result.status !== "fix" && (
-          <label className="agree">
-            <input type="checkbox" className="check" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} disabled={!!editing} />
-            <span>{t(lang, "confirmFields")}</span>
-          </label>
+        {step < 3 ? (
+          <div className="row2 equal">
+            <button className="secondary" disabled={step === 0} onClick={() => setStep((n) => n - 1)}>{t(lang, "ks_prev")}</button>
+            <button className="primary" onClick={() => setStep((n) => n + 1)} disabled={!!editing}>{t(lang, "ks_next")}</button>
+          </div>
+        ) : (
+          <>
+            <p className={`kyc-status ${result?.status ?? ""}`} role="status">
+              {!result ? t(lang, "kyc_waiting") : result.status === "fix" ? t(lang, "kyc_fix", { n: fails.length }) : t(lang, result.status === "review" ? "kyc_review" : "kyc_verified")}
+            </p>
+            {result && result.status !== "fix" && (
+              <label className="agree">
+                <input type="checkbox" className="check" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} disabled={!!editing} />
+                <span>{t(lang, "confirmFields")}</span>
+              </label>
+            )}
+            <button className="primary" disabled={!canGo} onClick={() => result && onContinue(result, snapshot())}>
+              {result?.status === "fix" ? t(lang, "fixFirst") : t(lang, "kycContinue")}
+            </button>
+          </>
         )}
-        <button className="primary" disabled={!canGo} onClick={() => result && onContinue(result, snapshot())}>
-          {result?.status === "fix" ? t(lang, "fixFirst") : t(lang, "kycContinue")}
-        </button>
       </footer>
     </>
   );
 }
+
+/** Review groups: every check sits under the question an owner would ask. */
+const GROUPS: [Key, Check["code"][]][] = [
+  ["kg_docs", ["missing", "unreadable", "wrong_kind", "field_missing"]],
+  ["kg_business", ["gstin_format", "gstin_registry", "gst_name", "gst_address", "udyam_format", "udyam_registry", "udyam_name", "udyam_place", "pan_format", "business_proof"]],
+  ["kg_application", ["gstin_quote", "state_match", "applicant_match", "names_match"]],
+  ["kg_signatory", ["signatory", "id_valid"]],
+  ["kg_address", ["address_recent", "address_match"]],
+];
 
 const rank = (c: Check) => (c.status === "fail" ? 0 : c.status === "warn" ? 1 : 2);

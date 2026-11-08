@@ -28,6 +28,8 @@ export interface Order {
   kyc?: { checks: Check[]; docs: Partial<Record<DocKind, Record<string, string>>>; edited: string[]; reviewNote?: string };
   contract?: { signedAt: string; method: "otp" | "aadhaar"; signatory: string };
   payment?: { ref: string; method: "upi" | "card"; amount: number; attempts: number };
+  /** Share of install days cut by a priority crew (manufacturer playbook). */
+  installCut?: number;
   /** Demo clock: days since the order, so the tracker keeps its place between screens. */
   simDay?: number;
   gstVerified: boolean;
@@ -50,7 +52,7 @@ export const DEFAULT_VISIT_DAY = 2;
 export const VISIT_DAYS = [1, 2, 3, 4];
 export const SLA_DAYS = 21;
 
-export function planTasks(o: Pick<Order, "items" | "kycStatus" | "visit">): Task[] {
+export function planTasks(o: Pick<Order, "items" | "kycStatus" | "visit" | "installCut">): Task[] {
   const kycDay = o.kycStatus === "review" ? 1 : 0;
   const visitDay = o.visit?.day ?? DEFAULT_VISIT_DAY;
   const tasks: Task[] = [{ id: "placed", kind: "placed", dueDay: 0 }, { id: "kyc", kind: "kyc", dueDay: kycDay }];
@@ -66,7 +68,8 @@ export function planTasks(o: Pick<Order, "items" | "kycStatus" | "visit">): Task
   for (const i of o.items) {
     const p = product(i.productId);
     const start = isOnSite(p.id) ? Math.max(visitDay, kycDay + 1) - 1 : kycDay;
-    tasks.push({ id: p.id, kind: "service", productId: p.id, qty: i.qty, dueDay: Math.max(start + p.installDays, kycDay + 1) });
+    const days = Math.max(1, Math.ceil(p.installDays * (1 - (o.installCut ?? 0))));
+    tasks.push({ id: p.id, kind: "service", productId: p.id, qty: i.qty, dueDay: Math.max(start + days, kycDay + 1) });
   }
   tasks.push({ id: "live", kind: "live", dueDay: Math.max(...tasks.map((t) => t.dueDay)) });
   return tasks.sort((a, b) => a.dueDay - b.dueDay || order(a) - order(b));

@@ -318,6 +318,1539 @@
    }
   ]
  },
+ "overall": {
+  "leads": 5000,
+  "share": 100,
+  "activated": 368,
+  "activationRate": 7.4,
+  "medianBundle": 6900,
+  "medianSpend": 1350,
+  "bundleToSpend": 3,
+  "costPerActivation": 15053,
+  "paybackMonths": 2.2,
+  "daysToLive": 17.6,
+  "followUps": 3,
+  "churn": 15.2,
+  "nps": 6.9,
+  "gstinShare": 70.7,
+  "kycClear": {
+   "gst": 80.6,
+   "noGst": 24.7
+  },
+  "stageConv": [
+   68.1,
+   58,
+   43.6,
+   68.3,
+   62.6
+  ],
+  "loss": {
+   "process": 1944,
+   "reach": 1594,
+   "choice": 1053,
+   "network": 41
+  },
+  "reasons": [
+   {
+    "reason": "Unreachable after 3 attempts",
+    "count": 805,
+    "loss": "reach",
+    "stage": "Lead",
+    "share": 16.1,
+    "lift": 1,
+    "atStake": 408811,
+    "p": 0.074
+   },
+   {
+    "reason": "Owner had no time for a visit",
+    "count": 531,
+    "loss": "process",
+    "stage": "Contacted",
+    "share": 10.6,
+    "lift": 1,
+    "atStake": 395865,
+    "p": 0.108
+   },
+   {
+    "reason": "Not interested on first call",
+    "count": 470,
+    "loss": "reach",
+    "stage": "Lead",
+    "share": 9.4,
+    "lift": 1,
+    "atStake": 238685,
+    "p": 0.074
+   },
+   {
+    "reason": "Price too high",
+    "count": 414,
+    "loss": "choice",
+    "stage": "Needs assessed",
+    "share": 8.3,
+    "lift": 1,
+    "atStake": 532537,
+    "p": 0.186
+   },
+   {
+    "reason": "Locked in with current provider",
+    "count": 325,
+    "loss": "choice",
+    "stage": "Contacted",
+    "share": 6.5,
+    "lift": 1,
+    "atStake": 242290,
+    "p": 0.108
+   },
+   {
+    "reason": "Wrong or invalid number",
+    "count": 319,
+    "loss": "reach",
+    "stage": "Lead",
+    "share": 6.4,
+    "lift": 1,
+    "atStake": 162001,
+    "p": 0.074
+   },
+   {
+    "reason": "Visit not scheduled by sales",
+    "count": 296,
+    "loss": "process",
+    "stage": "Contacted",
+    "share": 5.9,
+    "lift": 1,
+    "atStake": 220670,
+    "p": 0.108
+   },
+   {
+    "reason": "Only wanted a mobile plan",
+    "count": 280,
+    "loss": "process",
+    "stage": "Contacted",
+    "share": 5.6,
+    "lift": 1,
+    "atStake": 208742,
+    "p": 0.108
+   },
+   {
+    "reason": "Competitor offered cheaper plan",
+    "count": 207,
+    "loss": "choice",
+    "stage": "Needs assessed",
+    "share": 4.1,
+    "lift": 1,
+    "atStake": 266269,
+    "p": 0.186
+   },
+   {
+    "reason": "Quote too complex to understand",
+    "count": 206,
+    "loss": "process",
+    "stage": "Needs assessed",
+    "share": 4.1,
+    "lift": 1,
+    "atStake": 264982,
+    "p": 0.186
+   },
+   {
+    "reason": "Quote took too long to arrive",
+    "count": 179,
+    "loss": "process",
+    "stage": "Needs assessed",
+    "share": 3.6,
+    "lift": 1,
+    "atStake": 230252,
+    "p": 0.186
+   },
+   {
+    "reason": "Decided to wait",
+    "count": 107,
+    "loss": "choice",
+    "stage": "Needs assessed",
+    "share": 2.1,
+    "lift": 1,
+    "atStake": 137636,
+    "p": 0.186
+   },
+   {
+    "reason": "Installation delayed beyond 21 days",
+    "count": 98,
+    "loss": "process",
+    "stage": "KYC complete",
+    "share": 2,
+    "lift": 1,
+    "atStake": 423200,
+    "p": 0.626
+   },
+   {
+    "reason": "Missing GST or Udyam document",
+    "count": 94,
+    "loss": "process",
+    "stage": "Quote accepted",
+    "share": 1.9,
+    "lift": 1,
+    "atStake": 277218,
+    "p": 0.427
+   },
+   {
+    "reason": "Found paperwork too long",
+    "count": 79,
+    "loss": "process",
+    "stage": "Quote accepted",
+    "share": 1.6,
+    "lift": 1,
+    "atStake": 232981,
+    "p": 0.427
+   },
+   {
+    "reason": "Authorised signatory not available",
+    "count": 53,
+    "loss": "process",
+    "stage": "Quote accepted",
+    "share": 1.1,
+    "lift": 1,
+    "atStake": 156304,
+    "p": 0.427
+   },
+   {
+    "reason": "Customer cancelled before install",
+    "count": 53,
+    "loss": "process",
+    "stage": "KYC complete",
+    "share": 1.1,
+    "lift": 1,
+    "atStake": 228873,
+    "p": 0.626
+   },
+   {
+    "reason": "Document details did not match",
+    "count": 47,
+    "loss": "process",
+    "stage": "Quote accepted",
+    "share": 0.9,
+    "lift": 1,
+    "atStake": 138609,
+    "p": 0.427
+   },
+   {
+    "reason": "Site not feasible for fibre",
+    "count": 41,
+    "loss": "network",
+    "stage": "KYC complete",
+    "share": 0.8,
+    "lift": 1,
+    "atStake": 177053,
+    "p": 0.626
+   },
+   {
+    "reason": "First payment failed",
+    "count": 28,
+    "loss": "process",
+    "stage": "KYC complete",
+    "share": 0.6,
+    "lift": 1,
+    "atStake": 120914,
+    "p": 0.626
+   }
+  ],
+  "topProducts": [
+   {
+    "id": "P08",
+    "attach": 52.2
+   },
+   {
+    "id": "P01",
+    "attach": 48.9
+   },
+   {
+    "id": "P07",
+    "attach": 47.8
+   },
+   {
+    "id": "P16",
+    "attach": 47.6
+   },
+   {
+    "id": "P02",
+    "attach": 27.4
+   }
+  ],
+  "sources": [
+   {
+    "source": "Field sales",
+    "leads": 1720,
+    "contactRate": 73.4,
+    "activationRate": 7.3
+   },
+   {
+    "source": "Channel partner",
+    "leads": 1010,
+    "contactRate": 71.2,
+    "activationRate": 8
+   },
+   {
+    "source": "Website form",
+    "leads": 995,
+    "contactRate": 54.9,
+    "activationRate": 4.3
+   },
+   {
+    "source": "Inbound call",
+    "leads": 504,
+    "contactRate": 80.2,
+    "activationRate": 9.5
+   },
+   {
+    "source": "Referral",
+    "leads": 413,
+    "contactRate": 78.9,
+    "activationRate": 14.8
+   },
+   {
+    "source": "WhatsApp campaign",
+    "leads": 358,
+    "contactRate": 41.3,
+    "activationRate": 2.8
+   }
+  ],
+  "toActivate": [
+   0.074,
+   0.108,
+   0.186,
+   0.427,
+   0.626,
+   1
+  ]
+ },
+ "segments": [
+  {
+   "key": "micro",
+   "name": "Micro retail & services",
+   "leads": 2709,
+   "share": 54.2,
+   "activated": 110,
+   "activationRate": 4.1,
+   "medianBundle": 2470,
+   "medianSpend": 900,
+   "bundleToSpend": 3,
+   "costPerActivation": 20007,
+   "paybackMonths": 8.1,
+   "daysToLive": 16.6,
+   "followUps": 3.2,
+   "churn": 22.7,
+   "nps": 7,
+   "gstinShare": 52.8,
+   "kycClear": {
+    "gst": 77.5,
+    "noGst": 23.1
+   },
+   "stageConv": [
+    68.4,
+    54.4,
+    32.2,
+    53.5,
+    63.2
+   ],
+   "loss": {
+    "process": 1104,
+    "reach": 856,
+    "choice": 631,
+    "network": 8
+   },
+   "reasons": [
+    {
+     "reason": "Unreachable after 3 attempts",
+     "count": 425,
+     "loss": "reach",
+     "stage": "Lead",
+     "share": 15.7,
+     "lift": 0.97,
+     "atStake": 42626,
+     "p": 0.041
+    },
+    {
+     "reason": "Owner had no time for a visit",
+     "count": 321,
+     "loss": "process",
+     "stage": "Contacted",
+     "share": 11.8,
+     "lift": 1.12,
+     "atStake": 47067,
+     "p": 0.059
+    },
+    {
+     "reason": "Not interested on first call",
+     "count": 253,
+     "loss": "reach",
+     "stage": "Lead",
+     "share": 9.3,
+     "lift": 0.99,
+     "atStake": 25375,
+     "p": 0.041
+    },
+    {
+     "reason": "Price too high",
+     "count": 250,
+     "loss": "choice",
+     "stage": "Needs assessed",
+     "share": 9.2,
+     "lift": 1.11,
+     "atStake": 67386,
+     "p": 0.109
+    },
+    {
+     "reason": "Locked in with current provider",
+     "count": 190,
+     "loss": "choice",
+     "stage": "Contacted",
+     "share": 7,
+     "lift": 1.08,
+     "atStake": 27859,
+     "p": 0.059
+    },
+    {
+     "reason": "Wrong or invalid number",
+     "count": 178,
+     "loss": "reach",
+     "stage": "Lead",
+     "share": 6.6,
+     "lift": 1.03,
+     "atStake": 17853,
+     "p": 0.041
+    },
+    {
+     "reason": "Only wanted a mobile plan",
+     "count": 171,
+     "loss": "process",
+     "stage": "Contacted",
+     "share": 6.3,
+     "lift": 1.13,
+     "atStake": 25073,
+     "p": 0.059
+    },
+    {
+     "reason": "Visit not scheduled by sales",
+     "count": 163,
+     "loss": "process",
+     "stage": "Contacted",
+     "share": 6,
+     "lift": 1.02,
+     "atStake": 23900,
+     "p": 0.059
+    },
+    {
+     "reason": "Quote too complex to understand",
+     "count": 132,
+     "loss": "process",
+     "stage": "Needs assessed",
+     "share": 4.9,
+     "lift": 1.18,
+     "atStake": 35580,
+     "p": 0.109
+    },
+    {
+     "reason": "Competitor offered cheaper plan",
+     "count": 131,
+     "loss": "choice",
+     "stage": "Needs assessed",
+     "share": 4.8,
+     "lift": 1.17,
+     "atStake": 35310,
+     "p": 0.109
+    },
+    {
+     "reason": "Quote took too long to arrive",
+     "count": 110,
+     "loss": "process",
+     "stage": "Needs assessed",
+     "share": 4.1,
+     "lift": 1.13,
+     "atStake": 29650,
+     "p": 0.109
+    },
+    {
+     "reason": "Decided to wait",
+     "count": 60,
+     "loss": "choice",
+     "stage": "Needs assessed",
+     "share": 2.2,
+     "lift": 1.03,
+     "atStake": 16173,
+     "p": 0.109
+    },
+    {
+     "reason": "Found paperwork too long",
+     "count": 46,
+     "loss": "process",
+     "stage": "Quote accepted",
+     "share": 1.7,
+     "lift": 1.07,
+     "atStake": 38456,
+     "p": 0.338
+    },
+    {
+     "reason": "Missing GST or Udyam document",
+     "count": 45,
+     "loss": "process",
+     "stage": "Quote accepted",
+     "share": 1.7,
+     "lift": 0.88,
+     "atStake": 37620,
+     "p": 0.338
+    },
+    {
+     "reason": "Authorised signatory not available",
+     "count": 33,
+     "loss": "process",
+     "stage": "Quote accepted",
+     "share": 1.2,
+     "lift": 1.15,
+     "atStake": 27588,
+     "p": 0.338
+    },
+    {
+     "reason": "Document details did not match",
+     "count": 27,
+     "loss": "process",
+     "stage": "Quote accepted",
+     "share": 1,
+     "lift": 1.06,
+     "atStake": 22572,
+     "p": 0.338
+    },
+    {
+     "reason": "Installation delayed beyond 21 days",
+     "count": 27,
+     "loss": "process",
+     "stage": "KYC complete",
+     "share": 1,
+     "lift": 0.51,
+     "atStake": 42160,
+     "p": 0.632
+    },
+    {
+     "reason": "Customer cancelled before install",
+     "count": 22,
+     "loss": "process",
+     "stage": "KYC complete",
+     "share": 0.8,
+     "lift": 0.77,
+     "atStake": 34353,
+     "p": 0.632
+    },
+    {
+     "reason": "Site not feasible for fibre",
+     "count": 8,
+     "loss": "network",
+     "stage": "KYC complete",
+     "share": 0.3,
+     "lift": 0.36,
+     "atStake": 12492,
+     "p": 0.632
+    },
+    {
+     "reason": "First payment failed",
+     "count": 7,
+     "loss": "process",
+     "stage": "KYC complete",
+     "share": 0.3,
+     "lift": 0.46,
+     "atStake": 10930,
+     "p": 0.632
+    }
+   ],
+   "topProducts": [
+    {
+     "id": "P07",
+     "attach": 100
+    },
+    {
+     "id": "P01",
+     "attach": 91.8
+    },
+    {
+     "id": "P19",
+     "attach": 33.6
+    },
+    {
+     "id": "P22",
+     "attach": 30.9
+    },
+    {
+     "id": "P23",
+     "attach": 30
+    }
+   ],
+   "sources": [
+    {
+     "source": "Field sales",
+     "leads": 894,
+     "contactRate": 72.4,
+     "activationRate": 3
+    },
+    {
+     "source": "Channel partner",
+     "leads": 568,
+     "contactRate": 71.5,
+     "activationRate": 5.3
+    },
+    {
+     "source": "Website form",
+     "leads": 544,
+     "contactRate": 55.9,
+     "activationRate": 2
+    },
+    {
+     "source": "Inbound call",
+     "leads": 269,
+     "contactRate": 83.3,
+     "activationRate": 5.9
+    },
+    {
+     "source": "Referral",
+     "leads": 234,
+     "contactRate": 79.9,
+     "activationRate": 10.3
+    },
+    {
+     "source": "WhatsApp campaign",
+     "leads": 200,
+     "contactRate": 42.5,
+     "activationRate": 1
+    }
+   ],
+   "toActivate": [
+    0.041,
+    0.059,
+    0.109,
+    0.338,
+    0.632,
+    1
+   ]
+  },
+  {
+   "key": "prof",
+   "name": "Professional offices",
+   "leads": 1247,
+   "share": 24.9,
+   "activated": 138,
+   "activationRate": 11.1,
+   "medianBundle": 6575,
+   "medianSpend": 2600,
+   "bundleToSpend": 3,
+   "costPerActivation": 10695,
+   "paybackMonths": 1.6,
+   "daysToLive": 16.9,
+   "followUps": 3.1,
+   "churn": 13.8,
+   "nps": 6.9,
+   "gstinShare": 86.1,
+   "kycClear": {
+    "gst": 83,
+    "noGst": 27.3
+   },
+   "stageConv": [
+    69.3,
+    62.3,
+    53,
+    74.4,
+    65.1
+   ],
+   "loss": {
+    "process": 463,
+    "reach": 383,
+    "choice": 246,
+    "network": 17
+   },
+   "reasons": [
+    {
+     "reason": "Unreachable after 3 attempts",
+     "count": 196,
+     "loss": "reach",
+     "stage": "Lead",
+     "share": 15.7,
+     "lift": 0.98,
+     "atStake": 142615,
+     "p": 0.111
+    },
+    {
+     "reason": "Not interested on first call",
+     "count": 113,
+     "loss": "reach",
+     "stage": "Lead",
+     "share": 9.1,
+     "lift": 0.96,
+     "atStake": 82222,
+     "p": 0.111
+    },
+    {
+     "reason": "Owner had no time for a visit",
+     "count": 111,
+     "loss": "process",
+     "stage": "Contacted",
+     "share": 8.9,
+     "lift": 0.84,
+     "atStake": 116569,
+     "p": 0.16
+    },
+    {
+     "reason": "Price too high",
+     "count": 98,
+     "loss": "choice",
+     "stage": "Needs assessed",
+     "share": 7.9,
+     "lift": 0.95,
+     "atStake": 165279,
+     "p": 0.257
+    },
+    {
+     "reason": "Visit not scheduled by sales",
+     "count": 79,
+     "loss": "process",
+     "stage": "Contacted",
+     "share": 6.3,
+     "lift": 1.07,
+     "atStake": 82964,
+     "p": 0.16
+    },
+    {
+     "reason": "Locked in with current provider",
+     "count": 75,
+     "loss": "choice",
+     "stage": "Contacted",
+     "share": 6,
+     "lift": 0.93,
+     "atStake": 78763,
+     "p": 0.16
+    },
+    {
+     "reason": "Wrong or invalid number",
+     "count": 74,
+     "loss": "reach",
+     "stage": "Lead",
+     "share": 5.9,
+     "lift": 0.93,
+     "atStake": 53844,
+     "p": 0.111
+    },
+    {
+     "reason": "Only wanted a mobile plan",
+     "count": 61,
+     "loss": "process",
+     "stage": "Contacted",
+     "share": 4.9,
+     "lift": 0.87,
+     "atStake": 64061,
+     "p": 0.16
+    },
+    {
+     "reason": "Competitor offered cheaper plan",
+     "count": 47,
+     "loss": "choice",
+     "stage": "Needs assessed",
+     "share": 3.8,
+     "lift": 0.91,
+     "atStake": 79267,
+     "p": 0.257
+    },
+    {
+     "reason": "Quote took too long to arrive",
+     "count": 41,
+     "loss": "process",
+     "stage": "Needs assessed",
+     "share": 3.3,
+     "lift": 0.92,
+     "atStake": 69147,
+     "p": 0.257
+    },
+    {
+     "reason": "Quote too complex to understand",
+     "count": 41,
+     "loss": "process",
+     "stage": "Needs assessed",
+     "share": 3.3,
+     "lift": 0.8,
+     "atStake": 69147,
+     "p": 0.257
+    },
+    {
+     "reason": "Installation delayed beyond 21 days",
+     "count": 30,
+     "loss": "process",
+     "stage": "KYC complete",
+     "share": 2.4,
+     "lift": 1.23,
+     "atStake": 128399,
+     "p": 0.651
+    },
+    {
+     "reason": "Missing GST or Udyam document",
+     "count": 30,
+     "loss": "process",
+     "stage": "Quote accepted",
+     "share": 2.4,
+     "lift": 1.28,
+     "atStake": 95511,
+     "p": 0.484
+    },
+    {
+     "reason": "Decided to wait",
+     "count": 26,
+     "loss": "choice",
+     "stage": "Needs assessed",
+     "share": 2.1,
+     "lift": 0.97,
+     "atStake": 43850,
+     "p": 0.257
+    },
+    {
+     "reason": "Found paperwork too long",
+     "count": 17,
+     "loss": "process",
+     "stage": "Quote accepted",
+     "share": 1.4,
+     "lift": 0.86,
+     "atStake": 54123,
+     "p": 0.484
+    },
+    {
+     "reason": "Customer cancelled before install",
+     "count": 17,
+     "loss": "process",
+     "stage": "KYC complete",
+     "share": 1.4,
+     "lift": 1.29,
+     "atStake": 72759,
+     "p": 0.651
+    },
+    {
+     "reason": "Site not feasible for fibre",
+     "count": 17,
+     "loss": "network",
+     "stage": "KYC complete",
+     "share": 1.4,
+     "lift": 1.66,
+     "atStake": 72759,
+     "p": 0.651
+    },
+    {
+     "reason": "Document details did not match",
+     "count": 13,
+     "loss": "process",
+     "stage": "Quote accepted",
+     "share": 1,
+     "lift": 1.11,
+     "atStake": 41388,
+     "p": 0.484
+    },
+    {
+     "reason": "Authorised signatory not available",
+     "count": 13,
+     "loss": "process",
+     "stage": "Quote accepted",
+     "share": 1,
+     "lift": 0.98,
+     "atStake": 41388,
+     "p": 0.484
+    },
+    {
+     "reason": "First payment failed",
+     "count": 10,
+     "loss": "process",
+     "stage": "KYC complete",
+     "share": 0.8,
+     "lift": 1.43,
+     "atStake": 42800,
+     "p": 0.651
+    }
+   ],
+   "topProducts": [
+    {
+     "id": "P16",
+     "attach": 100
+    },
+    {
+     "id": "P08",
+     "attach": 52.2
+    },
+    {
+     "id": "P20",
+     "attach": 48.6
+    },
+    {
+     "id": "P07",
+     "attach": 47.8
+    },
+    {
+     "id": "P02",
+     "attach": 44.2
+    }
+   ],
+   "sources": [
+    {
+     "source": "Field sales",
+     "leads": 447,
+     "contactRate": 75.6,
+     "activationRate": 11.9
+    },
+    {
+     "source": "Channel partner",
+     "leads": 246,
+     "contactRate": 71.5,
+     "activationRate": 11.4
+    },
+    {
+     "source": "Website form",
+     "leads": 233,
+     "contactRate": 55.8,
+     "activationRate": 7.7
+    },
+    {
+     "source": "Inbound call",
+     "leads": 130,
+     "contactRate": 77.7,
+     "activationRate": 10
+    },
+    {
+     "source": "Referral",
+     "leads": 101,
+     "contactRate": 77.2,
+     "activationRate": 21.8
+    },
+    {
+     "source": "WhatsApp campaign",
+     "leads": 90,
+     "contactRate": 45.6,
+     "activationRate": 4.4
+    }
+   ],
+   "toActivate": [
+    0.111,
+    0.16,
+    0.257,
+    0.484,
+    0.651,
+    1
+   ]
+  },
+  {
+   "key": "multi",
+   "name": "Small multi-site businesses",
+   "leads": 755,
+   "share": 15.1,
+   "activated": 83,
+   "activationRate": 11,
+   "medianBundle": 28080,
+   "medianSpend": 9150,
+   "bundleToSpend": 3.04,
+   "costPerActivation": 15614,
+   "paybackMonths": 0.6,
+   "daysToLive": 18.8,
+   "followUps": 2.8,
+   "churn": 10.8,
+   "nps": 6.7,
+   "gstinShare": 98.3,
+   "kycClear": {
+    "gst": 79.4,
+    "noGst": 66.7
+   },
+   "stageConv": [
+    66,
+    60,
+    56.2,
+    79.2,
+    62.4
+   ],
+   "loss": {
+    "process": 266,
+    "reach": 257,
+    "choice": 137,
+    "network": 12
+   },
+   "reasons": [
+    {
+     "reason": "Unreachable after 3 attempts",
+     "count": 133,
+     "loss": "reach",
+     "stage": "Lead",
+     "share": 17.6,
+     "lift": 1.09,
+     "atStake": 410563,
+     "p": 0.11
+    },
+    {
+     "reason": "Owner had no time for a visit",
+     "count": 78,
+     "loss": "process",
+     "stage": "Contacted",
+     "share": 10.3,
+     "lift": 0.97,
+     "atStake": 365040,
+     "p": 0.167
+    },
+    {
+     "reason": "Not interested on first call",
+     "count": 72,
+     "loss": "reach",
+     "stage": "Lead",
+     "share": 9.5,
+     "lift": 1.01,
+     "atStake": 222260,
+     "p": 0.11
+    },
+    {
+     "reason": "Wrong or invalid number",
+     "count": 52,
+     "loss": "reach",
+     "stage": "Lead",
+     "share": 6.9,
+     "lift": 1.08,
+     "atStake": 160521,
+     "p": 0.11
+    },
+    {
+     "reason": "Locked in with current provider",
+     "count": 50,
+     "loss": "choice",
+     "stage": "Contacted",
+     "share": 6.6,
+     "lift": 1.02,
+     "atStake": 234000,
+     "p": 0.167
+    },
+    {
+     "reason": "Price too high",
+     "count": 49,
+     "loss": "choice",
+     "stage": "Needs assessed",
+     "share": 6.5,
+     "lift": 0.78,
+     "atStake": 381944,
+     "p": 0.278
+    },
+    {
+     "reason": "Visit not scheduled by sales",
+     "count": 38,
+     "loss": "process",
+     "stage": "Contacted",
+     "share": 5,
+     "lift": 0.85,
+     "atStake": 177840,
+     "p": 0.167
+    },
+    {
+     "reason": "Only wanted a mobile plan",
+     "count": 33,
+     "loss": "process",
+     "stage": "Contacted",
+     "share": 4.4,
+     "lift": 0.78,
+     "atStake": 154440,
+     "p": 0.167
+    },
+    {
+     "reason": "Installation delayed beyond 21 days",
+     "count": 28,
+     "loss": "process",
+     "stage": "KYC complete",
+     "share": 3.7,
+     "lift": 1.89,
+     "atStake": 490661,
+     "p": 0.624
+    },
+    {
+     "reason": "Competitor offered cheaper plan",
+     "count": 25,
+     "loss": "choice",
+     "stage": "Needs assessed",
+     "share": 3.3,
+     "lift": 0.8,
+     "atStake": 194870,
+     "p": 0.278
+    },
+    {
+     "reason": "Quote too complex to understand",
+     "count": 24,
+     "loss": "process",
+     "stage": "Needs assessed",
+     "share": 3.2,
+     "lift": 0.77,
+     "atStake": 187075,
+     "p": 0.278
+    },
+    {
+     "reason": "Quote took too long to arrive",
+     "count": 20,
+     "loss": "process",
+     "stage": "Needs assessed",
+     "share": 2.6,
+     "lift": 0.74,
+     "atStake": 155896,
+     "p": 0.278
+    },
+    {
+     "reason": "Found paperwork too long",
+     "count": 13,
+     "loss": "process",
+     "stage": "Quote accepted",
+     "share": 1.7,
+     "lift": 1.09,
+     "atStake": 180347,
+     "p": 0.494
+    },
+    {
+     "reason": "Decided to wait",
+     "count": 13,
+     "loss": "choice",
+     "stage": "Needs assessed",
+     "share": 1.7,
+     "lift": 0.8,
+     "atStake": 101332,
+     "p": 0.278
+    },
+    {
+     "reason": "Missing GST or Udyam document",
+     "count": 12,
+     "loss": "process",
+     "stage": "Quote accepted",
+     "share": 1.6,
+     "lift": 0.85,
+     "atStake": 166474,
+     "p": 0.494
+    },
+    {
+     "reason": "Site not feasible for fibre",
+     "count": 12,
+     "loss": "network",
+     "stage": "KYC complete",
+     "share": 1.6,
+     "lift": 1.94,
+     "atStake": 210283,
+     "p": 0.624
+    },
+    {
+     "reason": "Customer cancelled before install",
+     "count": 6,
+     "loss": "process",
+     "stage": "KYC complete",
+     "share": 0.8,
+     "lift": 0.75,
+     "atStake": 105142,
+     "p": 0.624
+    },
+    {
+     "reason": "Document details did not match",
+     "count": 6,
+     "loss": "process",
+     "stage": "Quote accepted",
+     "share": 0.8,
+     "lift": 0.85,
+     "atStake": 83237,
+     "p": 0.494
+    },
+    {
+     "reason": "Authorised signatory not available",
+     "count": 4,
+     "loss": "process",
+     "stage": "Quote accepted",
+     "share": 0.5,
+     "lift": 0.5,
+     "atStake": 55491,
+     "p": 0.494
+    },
+    {
+     "reason": "First payment failed",
+     "count": 4,
+     "loss": "process",
+     "stage": "KYC complete",
+     "share": 0.5,
+     "lift": 0.95,
+     "atStake": 70094,
+     "p": 0.624
+    }
+   ],
+   "topProducts": [
+    {
+     "id": "P08",
+     "attach": 100
+    },
+    {
+     "id": "P09",
+     "attach": 56.6
+    },
+    {
+     "id": "P01",
+     "attach": 51.8
+    },
+    {
+     "id": "P19",
+     "attach": 51.8
+    },
+    {
+     "id": "P02",
+     "attach": 48.2
+    }
+   ],
+   "sources": [
+    {
+     "source": "Field sales",
+     "leads": 278,
+     "contactRate": 74.1,
+     "activationRate": 12.2
+    },
+    {
+     "source": "Website form",
+     "leads": 160,
+     "contactRate": 53.1,
+     "activationRate": 6.9
+    },
+    {
+     "source": "Channel partner",
+     "leads": 135,
+     "contactRate": 66.7,
+     "activationRate": 11.1
+    },
+    {
+     "source": "Inbound call",
+     "leads": 76,
+     "contactRate": 76.3,
+     "activationRate": 15.8
+    },
+    {
+     "source": "Referral",
+     "leads": 59,
+     "contactRate": 76.3,
+     "activationRate": 13.6
+    },
+    {
+     "source": "WhatsApp campaign",
+     "leads": 47,
+     "contactRate": 29.8,
+     "activationRate": 6.4
+    }
+   ],
+   "toActivate": [
+    0.11,
+    0.167,
+    0.278,
+    0.494,
+    0.624,
+    1
+   ]
+  },
+  {
+   "key": "mfg",
+   "name": "Small manufacturers",
+   "leads": 289,
+   "share": 5.8,
+   "activated": 37,
+   "activationRate": 12.8,
+   "medianBundle": 15910,
+   "medianSpend": 14300,
+   "bundleToSpend": 1.23,
+   "costPerActivation": 15324,
+   "paybackMonths": 1,
+   "daysToLive": 20.5,
+   "followUps": 2.9,
+   "churn": 8.1,
+   "nps": 6.5,
+   "gstinShare": 99.3,
+   "kycClear": {
+    "gst": 83.1,
+    "noGst": 0
+   },
+   "stageConv": [
+    66.1,
+    67.5,
+    64.3,
+    83.1,
+    53.6
+   ],
+   "loss": {
+    "process": 111,
+    "reach": 98,
+    "choice": 39,
+    "network": 4
+   },
+   "reasons": [
+    {
+     "reason": "Unreachable after 3 attempts",
+     "count": 51,
+     "loss": "reach",
+     "stage": "Lead",
+     "share": 17.6,
+     "lift": 1.1,
+     "atStake": 103883,
+     "p": 0.128
+    },
+    {
+     "reason": "Not interested on first call",
+     "count": 32,
+     "loss": "reach",
+     "stage": "Lead",
+     "share": 11.1,
+     "lift": 1.18,
+     "atStake": 65181,
+     "p": 0.128
+    },
+    {
+     "reason": "Owner had no time for a visit",
+     "count": 21,
+     "loss": "process",
+     "stage": "Contacted",
+     "share": 7.3,
+     "lift": 0.68,
+     "atStake": 64723,
+     "p": 0.194
+    },
+    {
+     "reason": "Price too high",
+     "count": 17,
+     "loss": "choice",
+     "stage": "Needs assessed",
+     "share": 5.9,
+     "lift": 0.71,
+     "atStake": 77577,
+     "p": 0.287
+    },
+    {
+     "reason": "Visit not scheduled by sales",
+     "count": 16,
+     "loss": "process",
+     "stage": "Contacted",
+     "share": 5.5,
+     "lift": 0.94,
+     "atStake": 49313,
+     "p": 0.194
+    },
+    {
+     "reason": "Wrong or invalid number",
+     "count": 15,
+     "loss": "reach",
+     "stage": "Lead",
+     "share": 5.2,
+     "lift": 0.81,
+     "atStake": 30554,
+     "p": 0.128
+    },
+    {
+     "reason": "Only wanted a mobile plan",
+     "count": 15,
+     "loss": "process",
+     "stage": "Contacted",
+     "share": 5.2,
+     "lift": 0.93,
+     "atStake": 46231,
+     "p": 0.194
+    },
+    {
+     "reason": "Installation delayed beyond 21 days",
+     "count": 13,
+     "loss": "process",
+     "stage": "KYC complete",
+     "share": 4.5,
+     "lift": 2.3,
+     "atStake": 110909,
+     "p": 0.536
+    },
+    {
+     "reason": "Locked in with current provider",
+     "count": 10,
+     "loss": "choice",
+     "stage": "Contacted",
+     "share": 3.5,
+     "lift": 0.53,
+     "atStake": 30820,
+     "p": 0.194
+    },
+    {
+     "reason": "Quote too complex to understand",
+     "count": 9,
+     "loss": "process",
+     "stage": "Needs assessed",
+     "share": 3.1,
+     "lift": 0.76,
+     "atStake": 41070,
+     "p": 0.287
+    },
+    {
+     "reason": "Quote took too long to arrive",
+     "count": 8,
+     "loss": "process",
+     "stage": "Needs assessed",
+     "share": 2.8,
+     "lift": 0.77,
+     "atStake": 36507,
+     "p": 0.287
+    },
+    {
+     "reason": "Decided to wait",
+     "count": 8,
+     "loss": "choice",
+     "stage": "Needs assessed",
+     "share": 2.8,
+     "lift": 1.29,
+     "atStake": 36507,
+     "p": 0.287
+    },
+    {
+     "reason": "Customer cancelled before install",
+     "count": 8,
+     "loss": "process",
+     "stage": "KYC complete",
+     "share": 2.8,
+     "lift": 2.61,
+     "atStake": 68252,
+     "p": 0.536
+    },
+    {
+     "reason": "First payment failed",
+     "count": 7,
+     "loss": "process",
+     "stage": "KYC complete",
+     "share": 2.4,
+     "lift": 4.33,
+     "atStake": 59720,
+     "p": 0.536
+    },
+    {
+     "reason": "Missing GST or Udyam document",
+     "count": 7,
+     "loss": "process",
+     "stage": "Quote accepted",
+     "share": 2.4,
+     "lift": 1.29,
+     "atStake": 49647,
+     "p": 0.446
+    },
+    {
+     "reason": "Site not feasible for fibre",
+     "count": 4,
+     "loss": "network",
+     "stage": "KYC complete",
+     "share": 1.4,
+     "lift": 1.69,
+     "atStake": 34126,
+     "p": 0.536
+    },
+    {
+     "reason": "Competitor offered cheaper plan",
+     "count": 4,
+     "loss": "choice",
+     "stage": "Needs assessed",
+     "share": 1.4,
+     "lift": 0.33,
+     "atStake": 18253,
+     "p": 0.287
+    },
+    {
+     "reason": "Found paperwork too long",
+     "count": 3,
+     "loss": "process",
+     "stage": "Quote accepted",
+     "share": 1,
+     "lift": 0.66,
+     "atStake": 21277,
+     "p": 0.446
+    },
+    {
+     "reason": "Authorised signatory not available",
+     "count": 3,
+     "loss": "process",
+     "stage": "Quote accepted",
+     "share": 1,
+     "lift": 0.98,
+     "atStake": 21277,
+     "p": 0.446
+    },
+    {
+     "reason": "Document details did not match",
+     "count": 1,
+     "loss": "process",
+     "stage": "Quote accepted",
+     "share": 0.3,
+     "lift": 0.37,
+     "atStake": 7092,
+     "p": 0.446
+    }
+   ],
+   "topProducts": [
+    {
+     "id": "P08",
+     "attach": 100
+    },
+    {
+     "id": "P16",
+     "attach": 100
+    },
+    {
+     "id": "P05",
+     "attach": 51.4
+    },
+    {
+     "id": "P20",
+     "attach": 43.2
+    },
+    {
+     "id": "P21",
+     "attach": 37.8
+    }
+   ],
+   "sources": [
+    {
+     "source": "Field sales",
+     "leads": 101,
+     "contactRate": 71.3,
+     "activationRate": 10.9
+    },
+    {
+     "source": "Channel partner",
+     "leads": 61,
+     "contactRate": 77,
+     "activationRate": 13.1
+    },
+    {
+     "source": "Website form",
+     "leads": 58,
+     "contactRate": 46.6,
+     "activationRate": 5.2
+    },
+    {
+     "source": "Inbound call",
+     "leads": 29,
+     "contactRate": 72.4,
+     "activationRate": 24.1
+    },
+    {
+     "source": "WhatsApp campaign",
+     "leads": 21,
+     "contactRate": 38.1,
+     "activationRate": 4.8
+    },
+    {
+     "source": "Referral",
+     "leads": 19,
+     "contactRate": 84.2,
+     "activationRate": 36.8
+    }
+   ],
+   "toActivate": [
+    0.128,
+    0.194,
+    0.287,
+    0.446,
+    0.536,
+    1
+   ]
+  }
+ ],
+ "stages": [
+  "Lead",
+  "Contacted",
+  "Needs assessed",
+  "Quote accepted",
+  "KYC complete",
+  "Activated"
+ ],
  "thresholds": {
   "hot": 8.88,
   "warm": 5.48

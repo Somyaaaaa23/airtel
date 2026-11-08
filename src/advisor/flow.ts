@@ -16,7 +16,8 @@ export interface Draft {
   gst?: GstState;
   gstin?: string;
   legalName?: string;
-  currentInternet?: string;
+  /** Everything they use for internet today: chip keys, plus "other:<text>" for answers they typed. */
+  currentInternet?: string[];
   monthlySpend?: number;
   preNeeds: Need[]; // picked up from free text, pre-selected on the needs step
   needs?: Need[]; // confirmed
@@ -129,5 +130,8 @@ export const SPEND_CHIPS: [string, number][] = [["< ₹1,000", 750], ["₹1,000�
 export const COUNT_CHIPS: Record<"lines" | "cameras" | "vehicles" | "machines", number[]> = {
   lines: [1, 2, 3, 5, 10], cameras: [2, 4, 8, 16], vehicles: [1, 3, 5, 10], machines: [4, 8, 12, 20],
 };
-export const INTERNET_CHIPS = ["net_hotspot", "net_home", "net_business", "net_leased", "net_none"] as const;
+export const INTERNET_CHIPS = ["net_hotspot", "net_dongle", "net_home", "net_cable", "net_business", "net_leased", "net_none"] as const;
+/** "Nothing yet" can't be combined with anything else. */
+export const NET_NONE = "net_none";
+export const OTHER_PREFIX = "other:";
 export const SPEED_CHIPS: SpeedPref[] = ["auto", "basic", "fast", "gigabit", "dedicated"];

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { Order } from "../engine/orders";
 import { computeQuote } from "../engine/quote";
+import { smartPrice } from "../engine/pricing";
 import { fmtDate, inr, t, type Lang } from "../i18n/strings";
 import { OTP_IS_MOCK, sendOtp, verifyOtp } from "../services/otp";
 import type { QuoteResult } from "./Quote";
@@ -12,6 +13,7 @@ export function Contract({ lang, quote, phone, signatory, business, today, onSig
   lang: Lang; quote: QuoteResult; phone: string; signatory: string; business: string; today: string; onSigned: (s: Signed) => void;
 }) {
   const q = computeQuote(quote.items);
+  const sp = smartPrice(quote.items, quote.profile);
   const [agree, setAgree] = useState(false);
   const [method, setMethod] = useState<"otp" | "aadhaar" | null>(null);
   const [otp, setOtp] = useState("");
@@ -39,13 +41,15 @@ export function Contract({ lang, quote, phone, signatory, business, today, onSig
           {q.lines.map((l) => (
             <div key={l.product.id} className="recline"><span className="n">{l.product.name}{l.qty > 1 ? ` × ${l.qty}` : ""}</span><span className="num">{inr(l.monthly)}</span></div>
           ))}
-          <div className="total"><span>{t(lang, "monthly")}</span><b className="num">{inr(q.monthly)}</b></div>
+          <div className="total"><span>{t(lang, "sp_your")} <s className="num fine">{inr(sp.standard)}</s></span><b className="num">{inr(sp.monthly)}</b></div>
         </section>
         <section className="consent">
           <h3>{t(lang, "ctTerms")}</h3>
           <ol className="terms">
             <li>{t(lang, "ct_t1", { n: q.contractMonths })}</li>
-            <li>{q.setup ? t(lang, "ct_t2", { setup: inr(q.setup) }) : t(lang, "ct_t2_none")}</li>
+            <li>{sp.setupPayable ? t(lang, "ct_t2", { setup: inr(sp.setupPayable) }) : t(lang, "ct_t2_none")}</li>
+            {sp.launch && <li>{t(lang, "of_launch", { amount: inr(sp.launch.monthly), n: sp.launch.months })}</li>}
+            {sp.firstMonth < sp.monthly && !sp.launch && <li>{t(lang, "of_first", { amount: inr(sp.firstMonth) })}</li>}
             <li>{t(lang, "ct_t3")}</li>
             <li>{t(lang, "ct_t4")}</li>
             <li>{t(lang, "ct_t5")}</li>

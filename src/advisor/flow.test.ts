@@ -13,12 +13,12 @@ describe("advisor flow", () => {
     expect(d.preNeeds).toEqual(["cctv"]);
   });
   it("micro shops skip the speed question; others get it", () => {
-    const base: Draft = { ...empty, businessTypeId: "kirana", employees: 3, sites: 1, tier: 2, gst: "none", currentInternet: "x", monthlySpend: 900, needs: ["internet"] };
+    const base: Draft = { ...empty, businessTypeId: "kirana", employees: 3, sites: 1, tier: 2, gst: "none", currentInternet: ["net_hotspot"], monthlySpend: 900, needs: ["internet"] };
     expect(nextStep(base)).toBe("pincode");
     expect(nextStep({ ...base, businessTypeId: "dental" })).toBe("speed");
   });
   it("no pincode question when nothing needs a line", () => {
-    const d: Draft = { ...empty, businessTypeId: "kirana", employees: 3, sites: 1, tier: 2, gst: "none", currentInternet: "x", monthlySpend: 900, needs: ["mobile_lines", "website"], lines: 2 };
+    const d: Draft = { ...empty, businessTypeId: "kirana", employees: 3, sites: 1, tier: 2, gst: "none", currentInternet: ["net_hotspot"], monthlySpend: 900, needs: ["mobile_lines", "website"], lines: 2 };
     expect(nextStep(d)).toBe("done");
   });
   it("3+ shops make a micro business multi-site", () => {
@@ -27,7 +27,7 @@ describe("advisor flow", () => {
   });
   it("end-to-end: typed message → profile → recommendation", () => {
     let d = mergeExtracted(empty, extract("Kirana store in Patna, 3 staff, no GST. Need CCTV with 4 cameras, WhatsApp for orders and UPI billing"));
-    d = { ...d, sites: 1, currentInternet: "net_hotspot", monthlySpend: 750, needs: d.preNeeds, fibreFeasible: true };
+    d = { ...d, sites: 1, currentInternet: ["net_hotspot", "net_home"], monthlySpend: 750, needs: d.preNeeds, fibreFeasible: true };
     expect(nextStep(d)).toBe("done");
     const r = recommend(toProfile(d));
     expect(r.plans[0].items.map((i) => i.productId).sort()).toEqual(["P01", "P19", "P23"]);
