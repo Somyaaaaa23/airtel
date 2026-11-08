@@ -1,10 +1,12 @@
-/** Business-owner workspace: sidebar navigation, top bar with account menu, and the page content. */
+/** Business-owner workspace: top bar with pill navigation and account menu; on small screens the navigation opens as a drawer. */
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { t, type Key, type Lang } from "../i18n/strings";
-import { Brand, Icon, IconBack, IconClose, IconMenu, IconSpark, LangToggle } from "./ui";
+import { Icon, IconBack, IconClose, IconMenu, IconSpark, LangToggle } from "./ui";
 
 export type NavKey = "overview" | "services" | "plan" | "usage" | "bills" | "orders" | "support" | "profile";
 const MAIN: NavKey[] = ["overview", "services", "plan", "usage", "bills", "orders", "support"];
+/** Short labels for the pill bar; the drawer uses the full ones. */
+const SHORT: Partial<Record<NavKey, Key>> = { usage: "nav_usage_s", bills: "nav_bills_s", orders: "nav_orders_s" };
 
 export function OwnerShell({ lang, setLang, name, phone, title, active, onNav, onBack, onOpenDemos, onPrivacy, onSignOut, actions, flowing, children }: {
   lang: Lang; setLang: (l: Lang) => void; name: string; phone: string; title: string; active?: NavKey;
@@ -28,7 +30,7 @@ export function OwnerShell({ lang, setLang, name, phone, title, active, onNav, o
   }, [menu]);
 
   const go = (k: NavKey) => { setNavOpen(false); onNav(k); };
-  const item = (k: NavKey) => (
+  const drawerItem = (k: NavKey) => (
     <button key={k} className="nav-item" aria-current={active === k ? "page" : undefined} onClick={() => go(k)}>
       <Icon name={k} size={18} /><span>{t(lang, `nav_${k}` as Key)}</span>
     </button>
@@ -37,11 +39,10 @@ export function OwnerShell({ lang, setLang, name, phone, title, active, onNav, o
   return (
     <div className={`ws ${navOpen ? "nav-open" : ""}`} lang={lang}>
       <aside className="ws-side" aria-label="Main">
-        <Brand onClick={() => go("overview")} />
-        <nav className="ws-nav">{MAIN.map(item)}</nav>
+        <nav className="ws-nav">{MAIN.map(drawerItem)}</nav>
         <nav className="ws-nav" aria-label="Account">
-          <button className="nav-item only-sm" onClick={() => { setNavOpen(false); onOpenDemos(); }}><IconSpark /><span>{t(lang, "nav_demos")}</span></button>
-          {item("profile")}
+          <button className="nav-item" onClick={() => { setNavOpen(false); onOpenDemos(); }}><IconSpark /><span>{t(lang, "nav_demos")}</span></button>
+          {drawerItem("profile")}
           <div className="nav-row"><span><Icon name="language" size={18} />{t(lang, "nav_language")}</span><LangToggle lang={lang} setLang={setLang} /></div>
           <button className="nav-item" onClick={() => { setNavOpen(false); onPrivacy(); }}><Icon name="privacy" size={18} /><span>{t(lang, "nav_privacy")}</span></button>
           <button className="nav-item" onClick={onSignOut}><Icon name="signout" size={18} /><span>{t(lang, "signOut")}</span></button>
@@ -54,10 +55,15 @@ export function OwnerShell({ lang, setLang, name, phone, title, active, onNav, o
           <button className="iconbtn menu-btn" onClick={() => setNavOpen((v) => !v)} aria-label={navOpen ? t(lang, "nav_close") : t(lang, "nav_menu")} aria-expanded={navOpen}>
             {navOpen ? <IconClose /> : <IconMenu />}
           </button>
-          {onBack && <button className="iconbtn" onClick={onBack} aria-label={t(lang, "back")} title={t(lang, "back")}><IconBack /></button>}
-          <h1>{title}</h1>
-          {actions}
-          <button className="btn-ghost top-demos" onClick={onOpenDemos} title={t(lang, "nav_demos")}><IconSpark /><span className="hide-sm">{t(lang, "nav_demos")}</span></button>
+          <button className="wordmark" onClick={() => go("overview")}>Udyam Digital</button>
+          <nav className="pillnav" aria-label="Main">
+            {MAIN.map((k) => (
+              <button key={k} aria-current={active === k ? "page" : undefined} onClick={() => go(k)}>{t(lang, SHORT[k] ?? (`nav_${k}` as Key))}</button>
+            ))}
+          </nav>
+          <span className="spacer" />
+          <button className="roundbtn top-demos" onClick={onOpenDemos} title={t(lang, "nav_demos")} aria-label={t(lang, "nav_demos")}><IconSpark /></button>
+          <span className="top-lang"><LangToggle lang={lang} setLang={setLang} /></span>
           <div className="avatar-wrap" ref={menuRef}>
             <button className="avatar" onClick={() => setMenu((v) => !v)} aria-haspopup="menu" aria-expanded={menu} aria-label={t(lang, "nav_account")}>{initials}</button>
             {menu && (
@@ -71,6 +77,13 @@ export function OwnerShell({ lang, setLang, name, phone, title, active, onNav, o
             )}
           </div>
         </header>
+        {flowing && (
+          <div className="ws-sub">
+            {onBack && <button className="roundbtn" onClick={onBack} aria-label={t(lang, "back")} title={t(lang, "back")}><IconBack /></button>}
+            <h1>{title}</h1>
+            {actions}
+          </div>
+        )}
         <main className={`ws-main ${flowing ? "flowing" : ""}`}>{children}</main>
       </div>
     </div>

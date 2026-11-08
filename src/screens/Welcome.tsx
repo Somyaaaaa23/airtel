@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { DemoPanel } from "../components/demos";
 import { OtpInput } from "../components/OtpInput";
-import { Brand, IconBack, IconSpark, LangToggle } from "../components/ui";
+import { IconBack, IconSpark, LangToggle } from "../components/ui";
 import { t, type Lang } from "../i18n/strings";
 import { OTP_IS_MOCK, sendOtp, verifyOtp } from "../services/otp";
 
@@ -65,7 +65,6 @@ export function Welcome({ lang, setLang, onDone, onPrivacy, onSignedIn, onBack, 
     <div className="site" lang={lang}>
       <header className="topnav">
         <button className="iconbtn" onClick={step === "otp" ? toPhone : onBack} aria-label={t(lang, "back")}><IconBack /></button>
-        <Brand />
         <span className="spacer" />
         <LangToggle lang={lang} setLang={setLang} />
       </header>

@@ -1,6 +1,6 @@
 /** Staff sign-in page for the command centre. */
 import { useState } from "react";
-import { Brand, IconBack } from "../components/ui";
+import { IconBack } from "../components/ui";
 import { ADMIN_EMAIL, checkAdmin } from "../services/admin";
 
 export function AdminLogin({ onBack, onSignedIn }: { onBack: () => void; onSignedIn: (email: string) => void }) {
@@ -21,7 +21,7 @@ export function AdminLogin({ onBack, onSignedIn }: { onBack: () => void; onSigne
     <div className="site">
       <header className="topnav">
         <button className="iconbtn" onClick={onBack} aria-label="Back"><IconBack /></button>
-        <Brand sub="Accel Business · staff" />
+        <span className="spacer" />
       </header>
       <main className="auth-layout single">
       <form className="login-card" onSubmit={submit} noValidate>

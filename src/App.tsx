@@ -125,7 +125,13 @@ export default function App() {
   const library = demos && <DemoLibrary lang={lang} onTry={startDemo} onClose={() => setDemos(false)} />;
 
   if (screen === "start") {
-    return <Start lang={lang} setLang={setLang} onOwner={() => go(owner ? "dashboard" : "welcome")} onAdmin={() => go(admin ? "backoffice" : "adminLogin")} onPrivacy={openPrivacy} />;
+    return (
+      <>
+        <Start lang={lang} setLang={setLang} onOwner={() => go(owner ? "dashboard" : "welcome")} onAdmin={() => go(admin ? "backoffice" : "adminLogin")}
+          onPrivacy={openPrivacy} onDemos={() => setDemos(true)} />
+        {library}
+      </>
+    );
   }
   if (screen === "adminLogin" || (screen === "backoffice" && !admin)) {
     return <AdminLogin onBack={() => go("start")} onSignedIn={(email) => { setAdmin(email); go("backoffice"); }} />;
@@ -173,7 +179,9 @@ export default function App() {
         {screen === "dashboard" ? (
           <Dashboard lang={lang} view={view} name={applicant} phone={phone} order={order} orders={myOrders} canExpert={!!quote}
             onNav={navTo} onFindPlan={() => { setFromSim(false); restart(); }} onSim={() => { setFromSim(true); go("sim"); }}
-            onTrack={(o) => { setOrder(o); go("track"); }} onExpert={() => go("expert")} onPrivacy={openPrivacy} onSignOut={signOut} />
+            onTrack={(o) => { setOrder(o); go("track"); }} onExpert={() => go("expert")} onPrivacy={openPrivacy} onSignOut={signOut}
+            progress={{ rec: !!rec, quote: !!quote, kyc: !!kyc, signed: !!signed }}
+            onContinue={() => go(signed ? "payment" : kyc ? "contract" : quote ? "kyc" : rec ? "quote" : "advisor")} />
         ) : (
           <div className="flow">
             {JOURNEY_STEP[screen] !== undefined && <JourneyBar step={JOURNEY_STEP[screen]!} lang={lang} />}
