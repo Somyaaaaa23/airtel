@@ -30,6 +30,7 @@ import { currentConsent, PURPOSES } from "./services/consent";
 import { convertLead, saveLead, type LeadStage } from "./services/leads";
 import { scoreProfile } from "./services/leadScore";
 import { loadOrders, saveOrder } from "./services/orders";
+import { loadDemoMode, resetDemoData, saveDemoMode } from "./services/demo";
 
 type Screen = "start" | "adminLogin" | "dashboard" | "welcome" | "advisor" | "sim" | "quote" | "expert" | "consent" | "kyc" | "contract" | "payment" | "track" | "privacy" | "backoffice";
 
@@ -65,6 +66,8 @@ export default function App() {
   const [owner, setOwner] = useState(false);
   const [view, setView] = useState<NavKey>("overview");
   const [demos, setDemos] = useState(false);
+  const [demoMode, setDemoModeState] = useState(loadDemoMode);
+  const setDemoMode = (on: boolean) => { setDemoModeState(on); saveDemoMode(on); };
 
   const go = (s: Screen) => { setScreen(s); setDemos(false); window.scrollTo(0, 0); };
   const openPrivacy = () => { setPrivacyFrom(screen); go("privacy"); };
@@ -128,13 +131,14 @@ export default function App() {
     return (
       <>
         <Start lang={lang} setLang={setLang} onOwner={() => go(owner ? "dashboard" : "welcome")} onAdmin={() => go(admin ? "backoffice" : "adminLogin")}
-          onPrivacy={openPrivacy} onDemos={() => setDemos(true)} />
+          onPrivacy={openPrivacy} onDemos={() => setDemos(true)} demoMode={demoMode} setDemoMode={setDemoMode}
+          onReset={() => { resetDemoData(); setAdmin(null); signOut(); }} />
         {library}
       </>
     );
   }
   if (screen === "adminLogin" || (screen === "backoffice" && !admin)) {
-    return <AdminLogin onBack={() => go("start")} onSignedIn={(email) => { setAdmin(email); go("backoffice"); }} />;
+    return <AdminLogin lang={lang} setLang={setLang} demoMode={demoMode} onBack={() => go("start")} onSignedIn={(email) => { setAdmin(email); go("backoffice"); }} />;
   }
   if (screen === "backoffice" && admin) {
     return <div className="bo-shell"><BackOffice admin={admin} onSignOut={() => { setAdmin(null); go("start"); }} /></div>;
@@ -143,7 +147,7 @@ export default function App() {
     return (
       <>
         <Welcome lang={lang} setLang={setLang} onPrivacy={openPrivacy} onSignedIn={(p, name) => { setPhone(p); setApplicant(name); }}
-          onDone={toDashboard} onBack={() => go("start")} onTryDemo={startDemo} onOpenDemos={() => setDemos(true)} />
+          onDone={toDashboard} onBack={() => go("start")} onTryDemo={startDemo} onOpenDemos={() => setDemos(true)} demoMode={demoMode} />
         {library}
       </>
     );
@@ -174,7 +178,7 @@ export default function App() {
       <OwnerShell lang={lang} setLang={setLang} name={applicant} phone={phone} title={title}
         active={screen === "dashboard" ? view : NAV_OF[screen]} onNav={navTo}
         onBack={screen !== "dashboard" && back ? () => go(back) : undefined}
-        onOpenDemos={() => setDemos(true)} onPrivacy={openPrivacy} onSignOut={signOut} flowing={flowing}
+        onOpenDemos={() => setDemos(true)} onPrivacy={openPrivacy} onSignOut={signOut} flowing={flowing} demoMode={demoMode}
         actions={screen === "advisor" ? <button className="textbtn" onClick={restart}>{t(lang, "startOver")}</button> : undefined}>
         {screen === "dashboard" ? (
           <Dashboard lang={lang} view={view} name={applicant} phone={phone} order={order} orders={myOrders} canExpert={!!quote}
