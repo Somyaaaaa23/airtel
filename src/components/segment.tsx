@@ -2,22 +2,28 @@
 import { useState } from "react";
 import { product } from "../engine/catalogue";
 import type { SmartPrice } from "../engine/pricing";
+import { JOURNEY, journeyProgress, type JourneyStep } from "../engine/journey";
 import { PLAYBOOKS, segmentStats } from "../engine/segments";
 import type { Profile, Segment } from "../engine/types";
 import { inr, t, type Key, type Lang } from "../i18n/strings";
 
-const JOURNEY: Key[] = ["j_plan", "j_price", "j_verify", "j_sign", "j_pay", "j_live"];
-
-/** Six steps from first question to services live; shown under the header so the owner always knows where they are. */
-export function JourneyBar({ step, lang }: { step: number; lang: Lang }) {
+/** Seven steps from first question to tracking, with how many minutes of form-filling are left. Sticky at the top of each journey screen. */
+export function JourneyBar({ step, lang }: { step: JourneyStep; lang: Lang }) {
+  const p = journeyProgress(step);
+  const at = p.number - 1;
   return (
-    <ol className="journey" aria-label="Progress">
-      {JOURNEY.map((k, i) => (
-        <li key={k} className={i < step ? "done" : i === step ? "now" : ""} aria-current={i === step ? "step" : undefined}>
-          <i aria-hidden="true">{i < step ? "✓" : i + 1}</i><span>{t(lang, k)}</span>
-        </li>
-      ))}
-    </ol>
+    <nav className="journey-wrap" aria-label={t(lang, "js_status", { n: p.number, total: p.total, m: p.minutesLeft })}>
+      <p className="journey-status" aria-live="polite">
+        {p.minutesLeft > 0 ? t(lang, "js_status", { n: p.number, total: p.total, m: p.minutesLeft }) : t(lang, "js_status_done", { n: p.number, total: p.total })}
+      </p>
+      <ol className="journey">
+        {JOURNEY.map((k, i) => (
+          <li key={k} className={i < at ? "done" : i === at ? "now" : ""} aria-current={i === at ? "step" : undefined}>
+            <i aria-hidden="true">{i < at ? "✓" : i + 1}</i><span>{t(lang, `js_${k}` as Key)}</span>
+          </li>
+        ))}
+      </ol>
+    </nav>
   );
 }
 

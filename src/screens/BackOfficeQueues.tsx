@@ -16,7 +16,7 @@ const HEAT_TONE: Record<Heat, string> = { Hot: "out", Warm: "opt", Cold: "in" };
 export const HeatTag = ({ score }: { score?: number }) => <span className={`tag heat ${HEAT_TONE[heat(score)]}`}>{heat(score)}</span>;
 const pct = (v: number) => `${v.toLocaleString("en-IN", { maximumFractionDigits: 1 })}%`;
 const maskPhone = (p: string) => `${p.slice(0, 2)}••••••${p.slice(-2)}`;
-const STAGE: Record<AppLead["stage"], string> = { quote: "Quote", kyc: "KYC", contract: "Contract", payment: "Payment" };
+const STAGE: Record<AppLead["stage"], string> = { advisor: "Advisor", quote: "Quote", consent: "Consent", kyc: "KYC", contract: "Contract", payment: "Payment", track: "Tracking" };
 
 export function CallNext() {
   const [leads, setLeads] = useState(loadLeads);

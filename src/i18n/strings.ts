@@ -634,6 +634,18 @@ const en = {
   ad_err_password: "Enter your password.",
   ad_err_match: "That email and password don't match a staff account. Check both and try again.",
   ad_sso: "Prototype sign-in. In production this would be Accel's single sign-on.",
+  js_advisor: "Advisor",
+  js_quote: "Quote",
+  js_consent: "Consent",
+  js_kyc: "KYC",
+  js_sign: "Sign",
+  js_pay: "Pay",
+  js_track: "Track",
+  js_status: "Step {n} of {total} · about {m} min left",
+  js_status_done: "Step {n} of {total} · nothing more to fill in",
+  ex_talk: "Talk to an expert",
+  ex_body_noquote: "A business specialist will call you to understand your needs and suggest a plan.",
+  ex_back: "Back to where I was",
 };
 
 export type Key = keyof typeof en;
@@ -1251,6 +1263,18 @@ const hi: Record<Key, string> = {
   ad_err_password: "अपना पासवर्ड डालें।",
   ad_err_match: "यह ईमेल और पासवर्ड किसी स्टाफ़ अकाउंट से मेल नहीं खाते। दोनों जाँचकर फिर कोशिश करें।",
   ad_sso: "प्रोटोटाइप साइन-इन। असली सिस्टम में यह Accel का सिंगल साइन-ऑन होगा।",
+  js_advisor: "सलाह",
+  js_quote: "कोटेशन",
+  js_consent: "सहमति",
+  js_kyc: "KYC",
+  js_sign: "साइन",
+  js_pay: "भुगतान",
+  js_track: "ट्रैक",
+  js_status: "चरण {n} / {total} · लगभग {m} मिनट बाकी",
+  js_status_done: "चरण {n} / {total} · अब कुछ भरना नहीं है",
+  ex_talk: "एक्सपर्ट से बात करें",
+  ex_body_noquote: "एक बिज़नेस विशेषज्ञ आपकी ज़रूरत समझने और प्लान सुझाने के लिए कॉल करेंगे।",
+  ex_back: "जहाँ था वहाँ वापस",
 };
 
 export const STRINGS: Record<Lang, Record<Key, string>> = { en, hi };
