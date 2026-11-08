@@ -4,6 +4,7 @@
  */
 import { useState } from "react";
 import { DEMOS, type Demo, type DemoCategory } from "../data/demos";
+import { runAllScenarios, type ScenarioResult } from "../services/scenarios";
 import { t, type Key, type Lang } from "../i18n/strings";
 import { Icon, IconClose, Modal } from "./ui";
 
@@ -39,45 +40,98 @@ export function DemoPanel({ lang, onTry, onViewAll }: { lang: Lang; onTry: (text
   );
 }
 
-export function DemoLibrary({ lang, onTry, onClose }: { lang: Lang; onTry: (text: string) => void; onClose: () => void }) {
+export function DemoLibrary({ lang, onTry, onClose }: { lang: Lang; onTry: (text: string, runLang?: Lang) => void; onClose: () => void }) {
   const [cat, setCat] = useState<"all" | DemoCategory>("all");
-  const [pick, setPick] = useState<Demo | null>(null);
-  const list = DEMOS.filter((d) => cat === "all" || d.category === cat);
+  const [query, setQuery] = useState("");
+  const [pickId, setPickId] = useState<string>(DEMOS[0].id);
+  const [mobilePick, setMobilePick] = useState(false);
+  const [results, setResults] = useState<ScenarioResult[] | null>(null);
+  const [showResults, setShowResults] = useState(false);
+  const [running, setRunning] = useState(false);
+  const [runErr, setRunErr] = useState(false);
+  const q = query.trim().toLowerCase();
+  const list = DEMOS.filter((d) => (cat === "all" || d.category === cat)
+    && (!q || [d.name, d.city, d.text, d.shows, ...d.tags, d.rule.code].join(" ").toLowerCase().includes(q)));
+  const pick = DEMOS.find((d) => d.id === pickId) ?? DEMOS[0];
+  const resultFor = (id: string) => results?.find((r) => r.id === id);
+  const runAll = async () => {
+    setRunning(true); setRunErr(false); setShowResults(true); setMobilePick(true);
+    try { setResults(await runAllScenarios(DEMOS)); } catch { setRunErr(true); }
+    setRunning(false);
+  };
+  const run = (l?: Lang) => { onTry(pick.text, l); onClose(); };
+
   return (
     <Modal label={t(lang, "dm_library")} onClose={onClose}>
       <div className="modal-head">
-        {pick && <button className="textbtn lib-back" onClick={() => setPick(null)}>← {t(lang, "back")}</button>}
+        {mobilePick && <button className="textbtn lib-back" onClick={() => { setMobilePick(false); setShowResults(false); }}>← {t(lang, "back")}</button>}
         <h2>{t(lang, "dm_library")}</h2>
         <span className="fine">{t(lang, "dm_count", { n: list.length })}</span>
         <button className="iconbtn" onClick={onClose} aria-label={t(lang, "dm_close")}><IconClose /></button>
       </div>
-      <div className="filters" role="group" aria-label="Filter">
-        {CATS.map((c) => <button key={c} aria-pressed={cat === c} onClick={() => { setCat(c); setPick(null); }}>{catLabel(lang, c)}</button>)}
+      <div className="modal-tools">
+        <label className="vh" htmlFor="scn-search">{t(lang, "dm_search")}</label>
+        <input id="scn-search" className="input" type="search" placeholder={t(lang, "dm_search")} value={query} onChange={(e) => setQuery(e.target.value)} />
+        <div className="filters" role="group" aria-label="Filter">
+          {CATS.map((c) => <button key={c} aria-pressed={cat === c} onClick={() => setCat(c)}>{catLabel(lang, c)}</button>)}
+        </div>
       </div>
-      <div className={`lib ${pick ? "has-pick" : ""}`}>
+      <div className={`lib ${mobilePick ? "has-pick" : ""}`}>
         <div className="lib-list">
-          {list.map((d) => <ScenarioCard key={d.id} d={d} lang={lang} pressed={pick?.id === d.id} onClick={() => setPick(d)} showTags />)}
+          {list.length === 0 && <p className="empty">{t(lang, "dm_none")}</p>}
+          {list.map((d) => {
+            const r = resultFor(d.id);
+            return (
+              <div key={d.id} className="scn-wrap">
+                <ScenarioCard d={d} lang={lang} pressed={!showResults && pick.id === d.id} onClick={() => { setPickId(d.id); setShowResults(false); setMobilePick(true); }} showTags />
+                {r && <span className={`tag ${r.pass ? "in" : "out"} scn-res`}>{r.pass ? `✓ ${t(lang, "dm_pass")}` : `✕ ${t(lang, "dm_fail")}`}</span>}
+              </div>
+            );
+          })}
         </div>
         <div className="lib-preview" aria-live="polite">
-          {pick ? (
+          {showResults ? (
+            <>
+              <h3>{t(lang, "dm_results_t")}</h3>
+              {running && <div className="skeleton-list" aria-label={t(lang, "dm_running")}>{DEMOS.map((d) => <i key={d.id} className="skeleton" />)}</div>}
+              {runErr && <p className="notice blocked" role="alert">{t(lang, "dm_err")}</p>}
+              {results && !running && (
+                <>
+                  <p className={`tag ${results.every((r) => r.pass) ? "in" : "out"} start-self`}>{t(lang, "dm_results", { pass: results.filter((r) => r.pass).length, n: results.length })}</p>
+                  <ul className="runall">
+                    {results.map((r) => {
+                      const d = DEMOS.find((x) => x.id === r.id)!;
+                      return (
+                        <li key={r.id}>
+                          <b>{d.name} · {d.city}</b>
+                          <span className={`tag ${r.pass ? "in" : "out"}`}>{r.pass ? t(lang, "dm_pass") : t(lang, "dm_fail")}</span>
+                          <span className="fine">{r.checks.map((c) => `${c.ok ? "✓" : "✕"} ${c.label}`).join(" · ")}</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              )}
+            </>
+          ) : (
             <>
               <div>
-                <span className="eyebrow">{pick.city} · {catLabel(lang, pick.category)}</span>
+                <span className="eyebrow">{pick.city} · {catLabel(lang, pick.category)} · {pick.context}</span>
                 <h3>{pick.name}</h3>
               </div>
-              <div>
-                <span className="eyebrow">{t(lang, "dm_says")}</span>
-                <p className="bubble">{pick.text}</p>
-              </div>
-              <div>
-                <span className="eyebrow">{t(lang, "dm_shows")}</span>
-                <p className="what">{pick.shows}</p>
-              </div>
-              <div className="chips">{pick.tags.map((x) => <span key={x} className="tag info">{x}</span>)}</div>
-              <button className="primary" onClick={() => { onTry(pick.text); onClose(); }}>{t(lang, "dm_try")} →</button>
+              <div><span className="eyebrow">{t(lang, "dm_says")}</span><p className="bubble">{pick.text}</p></div>
+              <div><span className="eyebrow">{t(lang, "dm_shows")}</span><p className="what">{lang === "hi" ? pick.showsHi : pick.shows}</p></div>
+              <div><span className="eyebrow">{t(lang, "dm_rule")}</span><p className="rule"><code>{pick.rule.code}</code></p><p className="fine">{lang === "hi" ? pick.rule.hi : pick.rule.en}</p></div>
+              <div className="chips">{pick.tags.map((x) => <span key={x} className="tag">{x}</span>)}</div>
             </>
-          ) : <p className="lib-empty">{t(lang, "dm_pick")}</p>}
+          )}
         </div>
+      </div>
+      <div className="modal-foot">
+        <button className="secondary" onClick={runAll} disabled={running}>{running ? t(lang, "dm_running") : t(lang, "dm_run_all")}</button>
+        <span className="fine">{results ? t(lang, "dm_results", { pass: results.filter((r) => r.pass).length, n: results.length }) : ""}</span>
+        <button className="secondary" onClick={() => run("hi")} disabled={showResults}>{t(lang, "dm_run_hi")}</button>
+        <button className="primary" onClick={() => run()} disabled={showResults}>{t(lang, "dm_run")} →</button>
       </div>
     </Modal>
   );

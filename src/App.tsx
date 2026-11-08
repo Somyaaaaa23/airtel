@@ -75,7 +75,8 @@ export default function App() {
 
   const go = (s: Screen) => { setScreen(s); setDemos(false); window.scrollTo(0, 0); };
   const openPrivacy = () => { setPrivacyFrom(screen); go("privacy"); };
-  const startDemo = (text: string) => {
+  const startDemo = (text: string, runLang?: Lang) => {
+    if (runLang) setLang(runLang);
     setRun((r) => ({ key: r.key + 1, text }));
     setFromSim(false);
     setOwner(true);
