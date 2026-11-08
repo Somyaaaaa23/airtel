@@ -2,7 +2,7 @@ import { useState } from "react";
 import { product } from "../engine/catalogue";
 import { addDays } from "../engine/kyc";
 import {
-  dueDate, engineerFor, goLiveDay, needsVisit, planTasks, SLA_DAYS, taskStates, VISIT_DAYS, type Order, type Task, type VisitSlot,
+  dueDate, engineerFor, goLiveDay, needsVisit, nextUpdate, planTasks, SLA_DAYS, taskStates, VISIT_DAYS, type Order, type Task, type VisitSlot,
 } from "../engine/orders";
 import { fmtDate, inr, t, type Key, type Lang } from "../i18n/strings";
 import { saveOrder } from "../services/orders";
@@ -19,7 +19,7 @@ function taskText(task: Task, o: Order, lang: Lang): string {
   return t(lang, `svc_${p.category}` as Key, { product: name });
 }
 
-export function Tracker({ lang, order, onChange, onNew, onPrivacy }: { lang: Lang; order: Order; onChange: (o: Order) => void; onNew: () => void; onPrivacy: () => void }) {
+export function Tracker({ lang, order, onChange, onNew, onPrivacy, onHelp }: { lang: Lang; order: Order; onChange: (o: Order) => void; onNew: () => void; onPrivacy: () => void; onHelp: () => void }) {
   const day = order.simDay ?? 0;
   const setDay = (f: (d: number) => number) => { const next = { ...order, simDay: f(day) }; onChange(next); saveOrder(next); };
   const [picking, setPicking] = useState(needsVisit(order.items) && !order.visit);
@@ -28,6 +28,9 @@ export function Tracker({ lang, order, onChange, onNew, onPrivacy }: { lang: Lan
   const live = goLiveDay(tasks);
   const slow = order.items.map((i) => product(i.productId)).filter((p) => p.installDays > SLA_DAYS);
   const phone = `${order.phone.slice(0, 2)}••••••${order.phone.slice(-2)}`;
+  const upcoming = nextUpdate(order);
+  const notify = order.notifyWhatsApp !== false;
+  const setNotify = (on: boolean) => { const next = { ...order, notifyWhatsApp: on }; onChange(next); saveOrder(next); };
 
   const book = (visitDay: number, slot: VisitSlot) => {
     const next = { ...order, visit: { day: visitDay, slot } };
@@ -50,6 +53,19 @@ export function Tracker({ lang, order, onChange, onNew, onPrivacy }: { lang: Lan
           <i style={{ width: `${(states.filter((s) => s === "done").length / tasks.length) * 100}%` }} />
         </div>
         <span className="fine">{t(lang, "dayN", { n: day, date: fmtDate(addDays(order.placedOn, day), lang, true) })}</span>
+        <p className="next-up" role="status">
+          {upcoming ? t(lang, "tr_next", { date: fmtDate(addDays(order.placedOn, upcoming.day), lang, true), task: taskText(upcoming.task, order, lang) }) : t(lang, "tr_next_done")}
+        </p>
+      </section>
+
+      <section className="track-tools">
+        <label className="switch">
+          <input type="checkbox" checked={notify} onChange={(e) => setNotify(e.target.checked)} aria-describedby="notify-help" />
+          <span className="track" aria-hidden="true" />
+          {t(lang, "tr_notify")}
+        </label>
+        <span id="notify-help" className="fine">{notify ? t(lang, "tr_notify_on", { phone }) : t(lang, "tr_notify_off")}</span>
+        <button className="secondary auto" onClick={onHelp}>{t(lang, "tr_help")}</button>
       </section>
 
       {order.kycStatus === "review" && <div className="notice info">{t(lang, "reviewNote", { name: order.signatory ?? "" })}</div>}

@@ -13,7 +13,9 @@ export const PURPOSES: { id: Purpose; required: boolean }[] = [
   { id: "offers", required: false },
 ];
 export const NOTICE_VERSION = "2026-11-v1";
-export const GRIEVANCE = { name: "Grievance Officer, Accel Business", email: "privacy@accelbusiness.example", phone: "1800-000-0000" };
+export const GRIEVANCE = { name: "Grievance Officer, Accel Business", nameHi: "शिकायत अधिकारी, Accel Business", email: "privacy@accelbusiness.example", phone: "1800-000-0000" };
+/** Grievance contact with the officer's title in the owner's language. */
+export const grievanceFor = (lang: "en" | "hi") => ({ name: lang === "hi" ? GRIEVANCE.nameHi : GRIEVANCE.name, email: GRIEVANCE.email, phone: GRIEVANCE.phone });
 
 export interface ConsentEvent { phone: string; purpose: Purpose; granted: boolean; at: string; version: string }
 const KEY = "udyam-digital.consent.v1";

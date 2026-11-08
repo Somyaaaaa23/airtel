@@ -82,3 +82,6 @@ export function smartPrice(items: { productId: string; qty: number }[], profile:
     contractMonths: q.contractMonths,
   };
 }
+
+/** Monthly price shown per day (30-day month), rounded to the rupee. */
+export const perDay = (monthly: number) => Math.round(monthly / 30);

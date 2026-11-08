@@ -8,11 +8,11 @@ import { OTP_IS_MOCK, sendOtp, verifyOtp } from "../services/otp";
 
 const RESEND_AFTER = 30;
 
-export function Welcome({ lang, setLang, onDone, onPrivacy, onSignedIn, onBack, onTryDemo, onOpenDemos }: {
+export function Welcome({ lang, setLang, onDone, onPrivacy, onSignedIn, onBack, onTryDemo, onOpenDemos, demoMode }: {
   lang: Lang; setLang: (l: Lang) => void; onDone: (phone: string, name: string) => void; onPrivacy: () => void;
   /** Keeps the app's phone and name current, so a demo started from the side panel still uses them. */
   onSignedIn: (phone: string, name: string) => void;
-  onBack: () => void; onTryDemo: (text: string) => void; onOpenDemos: () => void;
+  onBack: () => void; onTryDemo: (text: string) => void; onOpenDemos: () => void; demoMode: boolean;
 }) {
   const [phone, setPhone] = useState("");
   const [step, setStep] = useState<"phone" | "otp" | "name">("phone");
@@ -69,7 +69,7 @@ export function Welcome({ lang, setLang, onDone, onPrivacy, onSignedIn, onBack, 
         <LangToggle lang={lang} setLang={setLang} />
       </header>
 
-      <main className="auth-layout">
+      <main className={`auth-layout ${demoMode ? "" : "single"}`}>
         <div className="auth-main">
           <section className="auth-card" aria-labelledby="auth-t">
             <div className="auth-steps" aria-hidden="true">{[1, 2, 3].map((i) => <i key={i} className={i <= n ? "on" : ""} />)}</div>
@@ -133,9 +133,9 @@ export function Welcome({ lang, setLang, onDone, onPrivacy, onSignedIn, onBack, 
 
             <div className="auth-foot"><button className="textbtn privacy-link" onClick={onPrivacy}>{t(lang, "privacyLink")}</button></div>
           </section>
-          <button className="secondary demo-open" onClick={onOpenDemos}><IconSpark />{t(lang, "dm_title")}</button>
+          {demoMode && <button className="secondary demo-open" onClick={onOpenDemos}><IconSpark />{t(lang, "dm_title")}</button>}
         </div>
-        <DemoPanel lang={lang} onTry={onTryDemo} onViewAll={onOpenDemos} />
+        {demoMode && <DemoPanel lang={lang} onTry={onTryDemo} onViewAll={onOpenDemos} />}
       </main>
     </div>
   );

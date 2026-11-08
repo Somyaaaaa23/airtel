@@ -12,9 +12,16 @@ rate struck through, your price, and the saving**, never below Accel's lowest pu
 The **command centre** reproduces the problem slide live from the data and adds a segment deep-dive with automatic
 "why we're lacking" findings, a leak map with revenue at stake, and a what-if simulator (`src/engine/diagnose.ts`).
 
-Look: warm ivory workspace, white cards, midnight-blue text (#172B3A), coral #FF654F for brand and selection, deep orange
-#F05A28 for primary actions, cyan #20C5D8 as the accent (active navigation, progress, small graphics). Playfair Display for
-brand headlines only, Inter for everything else. All tokens live at the top of `src/styles.css`.
+Look: one CSS-variable design system with light and dark themes (`src/styles.css`): Airtel red #D80000 for primary actions,
+charcoal text, white/cream surfaces, cyan only for information. Playfair Display for headlines, Inter for everything else,
+Noto Sans Devanagari for Hindi. `src/design/contrast.test.ts` checks every text/background pair for WCAG AA in both themes.
+
+**Demo mode** (switch on the landing page) reveals the scenario library, the staff demo login and a Reset demo button.
+The library previews each scenario's opening message, expected outcome and the rule it demonstrates, and **Run all** pushes
+every scenario through the parser, registry and rules engine to check its claimed outcome (`src/services/scenarios.ts`).
+
+**Accessibility:** 44px touch targets, visible focus rings on every surface, arrow-key navigation in menus, tabs and
+toggles, focus kept inside dialogs, a skip link, skeleton loaders, and bilingual empty and error states.
 
 **Layout:** landing page with a role choice → owner sign-in (six OTP boxes, resend timer, demo banner when OTP is mocked) with
 a compact demo panel beside it → owner workspace with a sidebar (Overview, My services, Find my plan, Usage & analytics,
@@ -36,7 +43,7 @@ Submission material: `docs/deliverables.md` (checklist and demo script), `docs/a
 ```bash
 npm install
 npm run dev          # http://localhost:5173
-npm test             # 65 tests: catalogue rules, plan tiers, advisor flow, Hindi/English parsing, GSTIN checksum, KYC, orders, propensity
+npm test             # 102 tests: catalogue rules, plan tiers, advisor flow, Hindi/English parsing, GSTIN checksum, KYC, orders, propensity
 npm run build        # production build in dist/
 npm run build:demo   # single self-contained HTML in dist-demo/ (used for the shareable demo link)
 npm run build:backoffice   # retrain the propensity model and rebuild src/data/backoffice.json from smb_leads.csv

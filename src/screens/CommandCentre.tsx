@@ -4,17 +4,23 @@ import bo from "../data/backoffice.json";
 import { product } from "../engine/catalogue";
 import { diagnose, LEVERS, simulate, topLeaks, TRANSITIONS, type LeverId, type Seg } from "../engine/diagnose";
 import { PLAYBOOKS } from "../engine/segments";
+import { LOSS_LABEL, lostToOwnProcessPct, type LossKind } from "../engine/lossCategories";
+import { METRIC_DEFS, type MetricId } from "../engine/metricDefs";
+import { InfoTip } from "../components/ui";
 import type { Segment } from "../engine/types";
 
 const NAME: Record<string, string> = { micro: "Micro retail", prof: "Professional offices", multi: "Multi-site", mfg: "Manufacturers" };
 const ROUTE: Record<string, string> = { self: "Fully online", assisted: "Online + specialist call", rm: "Relationship manager", priority: "Priority install crew" };
 const FRAME: Record<string, string> = { day: "₹ per day", staff: "₹ per staff member", site: "₹ per site", downtime: "Downtime cost" };
-const LOSS = [
-  { k: "process", label: "Our own process", tone: "var(--bad)" },
-  { k: "reach", label: "Unreachable or not interested", tone: "#a9b6c0" },
-  { k: "choice", label: "Chose not to buy", tone: "var(--warn)" },
-  { k: "network", label: "No network at site", tone: "var(--cyan)" },
-] as const;
+const LOSS: { k: LossKind; label: string; tone: string }[] = [
+  { k: "process", label: LOSS_LABEL.process.en, tone: "var(--bad)" },
+  { k: "reach", label: LOSS_LABEL.reach.en, tone: "var(--chart)" },
+  { k: "choice", label: LOSS_LABEL.choice.en, tone: "var(--warn)" },
+  { k: "network", label: LOSS_LABEL.network.en, tone: "var(--text)" },
+];
+/** Info tooltip with the metric's definition (staff view is English). */
+export const Def = ({ id, label }: { id: MetricId; label: string }) => <InfoTip text={METRIC_DEFS[id].en} label={label} />;
+export type RangeData = { label: string; kpis: typeof bo.kpis; funnel: typeof bo.funnel; loss: Record<LossKind, number> };
 const inr = (n: number) => "₹" + Math.round(n).toLocaleString("en-IN");
 const lakh = (n: number) => (n >= 1e7 ? `₹${(n / 1e7).toFixed(2)} cr` : n >= 1e5 ? `₹${(n / 1e5).toFixed(1)} lakh` : inr(n));
 const pct = (v: number) => `${Math.round(v * 10) / 10}%`;
@@ -66,16 +72,40 @@ function Bubbles({ onPick, picked }: { onPick?: (k: Segment) => void; picked?: s
   );
 }
 
-export function Overview() {
+export function FixFirst() {
+  const top = topLeaks(3);
+  return (
+    <section className="panel wide fixfirst" aria-labelledby="fix3-t">
+      <div className="panel-head"><h2 id="fix3-t">Fix these 3 first</h2><Def id="fixFirst" label="Fix these 3 first" /></div>
+      <p className="fine">Ranked by monthly revenue at stake <Def id="atStake" label="Revenue at stake" />, across all segments, full quarter.</p>
+      <ol className="fix3">
+        {top.map((l, i) => (
+          <li key={l.seg.key + l.reason}>
+            <span className="rank">{i + 1}</span>
+            <div>
+              <b>{l.reason}</b>
+              <span className="fine">{NAME[l.seg.key]} · {l.count} leads at {l.stage}</span>
+              <span className="tag in start-self">{l.fix}</span>
+            </div>
+            <b className="num money">{inr(l.atStake)}<small>/mo</small></b>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+export function Overview({ range }: { range: RangeData }) {
   const o = bo.overall;
-  const lost = Object.values(o.loss).reduce((a, b) => a + b, 0);
+  const lost = Object.values(range.loss).reduce((a, b) => a + b, 0);
   return (
     <div className="bo-grid">
+      <FixFirst />
       <section className="panel wide headline">
-        <span className="eyebrow">The real problem</span>
-        <h2><em>{pct((o.loss.process / lost) * 100)}</em> of the businesses we lost were lost to our own process, not to price or rivals.</h2>
-        <p className="fine">{bo.kpis.leads.toLocaleString("en-IN")} leads → {bo.kpis.activated} activations ({pct(bo.kpis.activationRate)}, Apr–Jun 2026). Where the other {lost.toLocaleString("en-IN")} went:</p>
-        <LossBar loss={o.loss} />
+        <div className="panel-head"><span className="eyebrow">The real problem · {range.label}</span><Def id="lostToProcess" label="Lost to our own process" /></div>
+        <h2><em>{pct(lostToOwnProcessPct(range.loss))}</em> of the businesses we lost were lost to our own process, not to price or rivals.</h2>
+        <p className="fine">{range.kpis.leads.toLocaleString("en-IN")} leads → {range.kpis.activated} activations ({pct(range.kpis.activationRate)}). Where the other {lost.toLocaleString("en-IN")} went:</p>
+        <LossBar loss={range.loss} />
       </section>
       <section className="panel">
         <h2>Where the volume is, the value isn't</h2>
@@ -83,20 +113,21 @@ export function Overview() {
         <Bubbles />
       </section>
       <section className="panel">
-        <h2>Funnel</h2>
+        <div className="panel-head"><h2>Funnel · {range.label}</h2><Def id="stageConv" label="Step conversion" /></div>
         <div className="funnel">
-          {bo.funnel.map((f, i) => (
+          {range.funnel.map((f, i) => (
             <div key={f.stage} className="frow">
               <span>{f.stage}</span>
-              <i style={{ width: `${(f.count / bo.funnel[0].count) * 100}%` }} />
+              <i style={{ width: `${(f.count / range.funnel[0].count) * 100}%` }} />
               <b className="num">{f.count.toLocaleString("en-IN")}</b>
-              <small className="num">{i ? pct((f.count / bo.funnel[i - 1].count) * 100) : ""}</small>
+              <small className="num">{i ? pct((f.count / Math.max(1, range.funnel[i - 1].count)) * 100) : ""}</small>
             </div>
           ))}
         </div>
       </section>
       <section className="panel wide">
         <h2>Segments at a glance</h2>
+        <p className="fine">Full quarter. Definitions: <Def id="medianBundle" label="Median bill" /> median bill · <Def id="costPerActivation" label="Cost per activation" /> cost per activation · <Def id="payback" label="Payback" /> payback · <Def id="churn" label="Churn" /> churn</p>
         <div className="tablewrap">
           <table className="bo-table">
             <thead><tr><th>Segment</th><th className="r">Leads</th><th className="r">Activate</th><th className="r">Median bill</th><th className="r">Cost / activation</th><th className="r">Payback</th><th className="r">Days to live</th><th className="r">6-mo churn</th><th>Playbook</th></tr></thead>
@@ -173,26 +204,26 @@ export function Segments() {
         <h2>Numbers</h2>
         <div className="kpis mini">
           {[
-            ["Median bill", inr(s.medianBundle)], ["Cost / activation", inr(s.costPerActivation)], ["Payback", `${s.paybackMonths} mo`],
-            ["Days to live", String(s.daysToLive)], ["Bundle ÷ spend", `${s.bundleToSpend}×`], ["6-mo churn", pct(s.churn)],
-            ["NPS", String(s.nps)], ["Has GSTIN", pct(s.gstinShare)],
-          ].map(([l, v]) => <div key={l} className="kpi"><span>{l}</span><b className="num">{v}</b></div>)}
+            ["Median bill", inr(s.medianBundle), "medianBundle"], ["Cost / activation", inr(s.costPerActivation), "costPerActivation"], ["Payback", `${s.paybackMonths} mo`, "payback"],
+            ["Days to live", String(s.daysToLive), "daysToLive"], ["Bundle ÷ spend", `${s.bundleToSpend}×`, "bundleToSpend"], ["6-mo churn", pct(s.churn), "churn"],
+            ["NPS", String(s.nps), "nps"], ["Has GSTIN", pct(s.gstinShare), "kycClear"],
+          ].map(([l, v, d]) => <div key={l} className="kpi"><span>{l} <Def id={d as MetricId} label={l} /></span><b className="num">{v}</b></div>)}
         </div>
-        <h3>KYC clearance after quote</h3>
+        <h3>KYC clearance after quote <Def id="kycClear" label="KYC clearance" /></h3>
         <div className="kycsplit">
           <div><span>With GSTIN</span><i style={{ width: `${s.kycClear.gst}%` }} /><b className="num">{pct(s.kycClear.gst)}</b></div>
           <div><span>Without</span><i className="neg" style={{ width: `${Math.max(1, s.kycClear.noGst)}%` }} /><b className="num">{pct(s.kycClear.noGst)}</b></div>
         </div>
       </section>
       <section className="panel">
-        <h2>Funnel vs all segments</h2>
+        <div className="panel-head"><h2>Funnel vs all segments</h2><Def id="stageConv" label="Step conversion" /></div>
         <StageCompare s={s} />
       </section>
       <section className="panel">
         <h2>Top drop reasons</h2>
         <div className="tablewrap">
           <table className="bo-table">
-            <thead><tr><th>Reason</th><th className="r">Leads</th><th className="r">vs avg</th><th className="r">₹/mo at stake</th></tr></thead>
+            <thead><tr><th>Reason</th><th className="r">Leads</th><th className="r">vs avg</th><th className="r">₹/mo at stake <Def id="atStake" label="Revenue at stake" /></th></tr></thead>
             <tbody>
               {s.reasons.slice(0, 8).map((r) => (
                 <tr key={r.reason}>
@@ -227,7 +258,7 @@ export function LeakFinder() {
   return (
     <div className="bo-grid">
       <section className="panel wide">
-        <h2>Leak map</h2>
+        <div className="panel-head"><h2>Leak map</h2><Def id="stageConv" label="Step conversion" /></div>
         <p className="fine">Conversion at each step. Red = below the all-segment rate, green = above; deeper colour = bigger gap. Hover a cell for the numbers.</p>
         <div className="heat" style={{ gridTemplateColumns: `140px repeat(${TRANSITIONS.length}, 1fr)` }}>
           <span />
@@ -240,7 +271,7 @@ export function LeakFinder() {
                 const a = Math.min(0.85, Math.abs(gap) / 16 + 0.08);
                 return (
                   <span key={i} className={`hc ${a > 0.45 ? "dark" : ""}`} title={`${NAME[s.key]}, ${TRANSITIONS[i]}: ${pct(v)} (${gap > 0 ? "+" : ""}${Math.round(gap)} pts vs all)`}
-                    style={{ background: gap < 0 ? `rgb(217 72 72 / ${a})` : `rgb(33 134 106 / ${a})` }}>
+                    style={{ background: `color-mix(in srgb, var(${gap < 0 ? "--bad" : "--ok"}) ${Math.round(a * 100)}%, transparent)` }}>
                     <b className="num">{pct(v)}</b><small className="num">{gap > 0 ? "+" : ""}{Math.round(gap)}</small>
                   </span>
                 );
@@ -250,7 +281,7 @@ export function LeakFinder() {
         </div>
       </section>
       <section className="panel wide">
-        <h2>Biggest leaks we can fix, in rupees</h2>
+        <div className="panel-head"><h2>Biggest leaks we can fix, in rupees</h2><Def id="atStake" label="Revenue at stake" /></div>
         <p className="fine">Monthly revenue these leads would have brought, at each segment's odds of activating from the step where they dropped.</p>
         <ol className="leaks">
           {leaks.map((l, i) => (
@@ -295,10 +326,10 @@ export function Simulator() {
       <section className="panel">
         <h2>Same quarter, same leads, with the new journey</h2>
         <div className="kpis mini sim-kpis">
-          <div className="kpi"><span>Activations</span><b className="num">{bo.kpis.activated} → {Math.round(bo.kpis.activated + extra)}</b><small>+{Math.round(extra)}</small></div>
-          <div className="kpi"><span>Activation rate</span><b className="num">{pct(bo.kpis.activationRate)} → {pct(((bo.kpis.activated + extra) / bo.kpis.leads) * 100)}</b></div>
-          <div className="kpi"><span>Cost per activation</span><b className="num">{inr(bo.kpis.costPerActivation)} → {inr(newCac)}</b><small>same sales spend</small></div>
-          <div className="kpi"><span>New monthly revenue</span><b className="num">{lakh(revenue)}</b><small>{lakh(revenue * 12)} a year</small></div>
+          <div className="kpi"><span>Activations <Def id="activated" label="Activations" /></span><b className="num">{bo.kpis.activated} → {Math.round(bo.kpis.activated + extra)}</b><small>+{Math.round(extra)}</small></div>
+          <div className="kpi"><span>Activation rate <Def id="activationRate" label="Activation rate" /></span><b className="num">{pct(bo.kpis.activationRate)} → {pct(((bo.kpis.activated + extra) / bo.kpis.leads) * 100)}</b></div>
+          <div className="kpi"><span>Cost per activation <Def id="costPerActivation" label="Cost per activation" /></span><b className="num">{inr(bo.kpis.costPerActivation)} → {inr(newCac)}</b><small>same sales spend</small></div>
+          <div className="kpi"><span>New monthly revenue <Def id="newRevenue" label="New monthly revenue" /></span><b className="num">{lakh(revenue)}</b><small>{lakh(revenue * 12)} a year</small></div>
         </div>
         <div className="tablewrap">
           <table className="bo-table">

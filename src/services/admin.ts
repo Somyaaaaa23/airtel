@@ -5,6 +5,9 @@
 export const ADMIN_EMAIL = "administrator123@udyamdigital.in";
 const ADMIN_PASSWORD = "123@123";
 
+/** Shown only in demo mode, so presenters can sign in to the command centre. */
+export const DEMO_STAFF = { email: ADMIN_EMAIL, password: ADMIN_PASSWORD };
+
 /** Accepts the full demo email or just its user name, in any letter case. */
 export function checkAdmin(id: string, password: string) {
   const v = id.trim().toLowerCase();

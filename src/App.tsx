@@ -2,13 +2,14 @@ import { useState } from "react";
 import { businessLabel } from "./advisor/explain";
 import { DemoLibrary } from "./components/demos";
 import { OwnerShell, type NavKey } from "./components/OwnerShell";
-import { Brand, IconBack, LangToggle } from "./components/ui";
+import { Brand, Icon, IconBack, LangToggle, Modal } from "./components/ui";
 import { KYC_TODAY, type KycResult } from "./engine/kyc";
 import { orderId, type Order } from "./engine/orders";
 import { computeQuote } from "./engine/quote";
 import { smartPrice } from "./engine/pricing";
 import { PLAYBOOKS } from "./engine/segments";
 import { JourneyBar } from "./components/segment";
+import type { JourneyStep } from "./engine/journey";
 import type { Profile, Recommendation } from "./engine/types";
 import { t, type Key, type Lang } from "./i18n/strings";
 import { Advisor } from "./screens/Advisor";
@@ -30,22 +31,27 @@ import { currentConsent, PURPOSES } from "./services/consent";
 import { convertLead, saveLead, type LeadStage } from "./services/leads";
 import { scoreProfile } from "./services/leadScore";
 import { loadOrders, saveOrder } from "./services/orders";
+import { loadDemoMode, resetDemoData, saveDemoMode } from "./services/demo";
+import { draftKey } from "./services/kycDraft";
+import { quoteSignature } from "./services/priceHold";
 
-type Screen = "start" | "adminLogin" | "dashboard" | "welcome" | "advisor" | "sim" | "quote" | "expert" | "consent" | "kyc" | "contract" | "payment" | "track" | "privacy" | "backoffice";
+type Screen = "start" | "adminLogin" | "dashboard" | "welcome" | "advisor" | "sim" | "quote" | "consent" | "kyc" | "contract" | "payment" | "track" | "privacy" | "backoffice";
 
 /** Screen to return to with the back arrow. */
 const BACK: Partial<Record<Screen, Screen>> = {
-  welcome: "start", advisor: "dashboard", sim: "dashboard", track: "dashboard", quote: "advisor", expert: "quote", consent: "quote", kyc: "quote", contract: "kyc", payment: "contract",
+  welcome: "start", advisor: "dashboard", sim: "dashboard", track: "dashboard", quote: "advisor", consent: "quote", kyc: "quote", contract: "kyc", payment: "contract",
 };
 /** Step of the six-step journey bar each screen belongs to. */
-const JOURNEY_STEP: Partial<Record<Screen, number>> = { advisor: 0, sim: 0, quote: 1, expert: 1, consent: 2, kyc: 2, contract: 3, payment: 4, track: 5 };
+const JOURNEY_STEP: Partial<Record<Screen, JourneyStep>> = { advisor: "advisor", sim: "advisor", quote: "quote", consent: "consent", kyc: "kyc", contract: "sign", payment: "pay", track: "track" };
+/** Where a call-back request is filed for the sales team, by screen. */
+const LEAD_STAGE: Partial<Record<Screen, LeadStage>> = { advisor: "advisor", sim: "advisor", quote: "quote", consent: "consent", kyc: "kyc", contract: "contract", payment: "payment", track: "track" };
 const TITLE: Partial<Record<Screen, Key>> = {
   advisor: "advisorTitle", sim: "simTitle", quote: "quoteTitle", consent: "cs_title", kyc: "kycTitle", contract: "ctTitle",
-  payment: "payTitle", track: "trackTitle", privacy: "pv_title", expert: "quoteTitle",
+  payment: "payTitle", track: "trackTitle", privacy: "pv_title",
 };
 /** Sidebar item that stays highlighted on each screen. */
 const NAV_OF: Partial<Record<Screen, NavKey>> = {
-  advisor: "plan", sim: "plan", quote: "plan", expert: "plan", consent: "plan", kyc: "plan", contract: "plan", payment: "plan", track: "orders",
+  advisor: "plan", sim: "plan", quote: "plan", consent: "plan", kyc: "plan", contract: "plan", payment: "plan", track: "orders",
 };
 
 export default function App() {
@@ -65,10 +71,14 @@ export default function App() {
   const [owner, setOwner] = useState(false);
   const [view, setView] = useState<NavKey>("overview");
   const [demos, setDemos] = useState(false);
+  const [expertOpen, setExpertOpen] = useState(false);
+  const [demoMode, setDemoModeState] = useState(loadDemoMode);
+  const setDemoMode = (on: boolean) => { setDemoModeState(on); saveDemoMode(on); };
 
   const go = (s: Screen) => { setScreen(s); setDemos(false); window.scrollTo(0, 0); };
   const openPrivacy = () => { setPrivacyFrom(screen); go("privacy"); };
-  const startDemo = (text: string) => {
+  const startDemo = (text: string, runLang?: Lang) => {
+    if (runLang) setLang(runLang);
     setRun((r) => ({ key: r.key + 1, text }));
     setFromSim(false);
     setOwner(true);
@@ -94,6 +104,19 @@ export default function App() {
       phone, name: applicant || undefined, business: business(), city: quote.profile.city, stage, reason,
       monthly: computeQuote(quote.items).monthly, score: scoreProfile(quote.profile, { lang, hasUdyam: !!kyc?.result.udyamVerified }),
     });
+  };
+  /** Files a call-back request from whichever step the owner is on, then confirms it. */
+  const talkToExpert = (reason?: string, fromQuote?: QuoteResult) => {
+    const stage = LEAD_STAGE[screen] ?? "quote";
+    const q = fromQuote ?? quote;
+    const p = q?.profile ?? rec?.profile;
+    saveLead({
+      phone, name: applicant || undefined, business: business(), city: p?.city, stage,
+      reason: reason ?? `Asked for an expert at ${stage}`,
+      monthly: q ? computeQuote(q.items).monthly : undefined,
+      score: p ? scoreProfile(p, { lang, hasUdyam: !!kyc?.result.udyamVerified }) : undefined,
+    });
+    setExpertOpen(true);
   };
   const toKyc = (q: QuoteResult) => {
     setQuote(q);
@@ -122,19 +145,25 @@ export default function App() {
     go("track");
   };
 
+  const expertDialog = expertOpen && (
+    <Modal label={t(lang, "expertTitle")} onClose={() => setExpertOpen(false)} className="modal-sm">
+      <Expert lang={lang} phone={phone} quote={quote ?? undefined} onBack={() => setExpertOpen(false)} />
+    </Modal>
+  );
   const library = demos && <DemoLibrary lang={lang} onTry={startDemo} onClose={() => setDemos(false)} />;
 
   if (screen === "start") {
     return (
       <>
         <Start lang={lang} setLang={setLang} onOwner={() => go(owner ? "dashboard" : "welcome")} onAdmin={() => go(admin ? "backoffice" : "adminLogin")}
-          onPrivacy={openPrivacy} onDemos={() => setDemos(true)} />
+          onPrivacy={openPrivacy} onDemos={() => setDemos(true)} demoMode={demoMode} setDemoMode={setDemoMode}
+          onReset={() => { resetDemoData(); setAdmin(null); signOut(); }} />
         {library}
       </>
     );
   }
   if (screen === "adminLogin" || (screen === "backoffice" && !admin)) {
-    return <AdminLogin onBack={() => go("start")} onSignedIn={(email) => { setAdmin(email); go("backoffice"); }} />;
+    return <AdminLogin lang={lang} setLang={setLang} demoMode={demoMode} onBack={() => go("start")} onSignedIn={(email) => { setAdmin(email); go("backoffice"); }} />;
   }
   if (screen === "backoffice" && admin) {
     return <div className="bo-shell"><BackOffice admin={admin} onSignOut={() => { setAdmin(null); go("start"); }} /></div>;
@@ -143,7 +172,7 @@ export default function App() {
     return (
       <>
         <Welcome lang={lang} setLang={setLang} onPrivacy={openPrivacy} onSignedIn={(p, name) => { setPhone(p); setApplicant(name); }}
-          onDone={toDashboard} onBack={() => go("start")} onTryDemo={startDemo} onOpenDemos={() => setDemos(true)} />
+          onDone={toDashboard} onBack={() => go("start")} onTryDemo={startDemo} onOpenDemos={() => setDemos(true)} demoMode={demoMode} />
         {library}
       </>
     );
@@ -174,35 +203,37 @@ export default function App() {
       <OwnerShell lang={lang} setLang={setLang} name={applicant} phone={phone} title={title}
         active={screen === "dashboard" ? view : NAV_OF[screen]} onNav={navTo}
         onBack={screen !== "dashboard" && back ? () => go(back) : undefined}
-        onOpenDemos={() => setDemos(true)} onPrivacy={openPrivacy} onSignOut={signOut} flowing={flowing}
-        actions={screen === "advisor" ? <button className="textbtn" onClick={restart}>{t(lang, "startOver")}</button> : undefined}>
+        onOpenDemos={() => setDemos(true)} onPrivacy={openPrivacy} onSignOut={signOut} flowing={flowing} demoMode={demoMode}
+        actions={<>
+          {screen !== "privacy" && (
+            <button className="btn-ghost expert-btn" onClick={() => talkToExpert()} aria-label={t(lang, "ex_talk")}><Icon name="support" size={18} /><span className="hide-sm">{t(lang, "ex_talk")}</span></button>
+          )}
+        </>}>
         {screen === "dashboard" ? (
           <Dashboard lang={lang} view={view} name={applicant} phone={phone} order={order} orders={myOrders} canExpert={!!quote}
             onNav={navTo} onFindPlan={() => { setFromSim(false); restart(); }} onSim={() => { setFromSim(true); go("sim"); }}
-            onTrack={(o) => { setOrder(o); go("track"); }} onExpert={() => go("expert")} onPrivacy={openPrivacy} onSignOut={signOut}
+            onTrack={(o) => { setOrder(o); go("track"); }} onExpert={() => talkToExpert()} onPrivacy={openPrivacy} onSignOut={signOut}
             progress={{ rec: !!rec, quote: !!quote, kyc: !!kyc, signed: !!signed }}
             onContinue={() => go(signed ? "payment" : kyc ? "contract" : quote ? "kyc" : rec ? "quote" : "advisor")} />
         ) : (
           <div className="flow">
             {JOURNEY_STEP[screen] !== undefined && <JourneyBar step={JOURNEY_STEP[screen]!} lang={lang} />}
             {screen === "advisor" && (
-              <Advisor key={run.key} lang={lang} initialText={run.text}
+              <Advisor key={run.key} lang={lang} initialText={run.text} onRestart={restart}
                 onQuote={(profile, r) => { setRec({ profile, rec: r }); go("quote"); }} />
             )}
             {screen === "sim" && <SimQuick lang={lang} onQuote={(profile, r) => { setRec({ profile, rec: r }); go("quote"); }} />}
             {screen === "quote" && rec && (
               <Quote key={JSON.stringify(rec.profile) + rec.rec.plans[0].items.map((i) => i.productId + i.qty).join()} lang={lang} profile={rec.profile} rec={rec.rec}
-                onKyc={toKyc} onExpert={(q) => { setQuote(q); saveLead({
-                  phone, name: applicant || undefined, business: businessLabel(q.profile.businessType, "en"), city: q.profile.city, stage: "quote",
-                  reason: "Asked for an expert from the quote", monthly: computeQuote(q.items).monthly, score: scoreProfile(q.profile, { lang, hasUdyam: false }),
-                }); go("expert"); }} />
+                onKyc={toKyc} onExpert={(q) => { setQuote(q); talkToExpert("Asked for an expert from the quote", q); }} />
             )}
-            {screen === "expert" && quote && <Expert lang={lang} phone={phone} quote={quote} onBack={() => go(kyc ? "kyc" : "quote")} />}
+            
             {screen === "consent" && <Consent lang={lang} phone={phone} onDone={() => go("kyc")} onPrivacy={openPrivacy} />}
             {screen === "kyc" && quote && (
               <Kyc key={JSON.stringify(quote.items)} lang={lang} quote={quote} applicant={applicant || undefined}
+                draftKey={draftKey(phone, quoteSignature(quote.items, quote.profile))} onResumeLater={() => { setView("overview"); go("dashboard"); }}
                 onContinue={(result, snap) => { setKyc({ result, snap }); setSigned(null); go("contract"); }}
-                onExpert={(reason) => { stall("kyc", `Stuck at KYC: ${reason}`); go("expert"); }} />
+                onExpert={(reason) => talkToExpert(`Stuck at KYC: ${reason}`)} />
             )}
             {screen === "contract" && quote && kyc && (
               <Contract lang={lang} quote={quote} phone={phone} signatory={kyc.result.signatory ?? applicant} business={business()} today={KYC_TODAY}
@@ -212,13 +243,14 @@ export default function App() {
               <Payment lang={lang} quote={quote} onPaid={placeOrder} onFailed={() => stall("payment", "First payment failed")} />
             )}
             {screen === "track" && order && (
-              <Tracker key={order.id} lang={lang} order={order} onChange={setOrder} onNew={restart} onPrivacy={openPrivacy} />
+              <Tracker key={order.id} lang={lang} order={order} onChange={setOrder} onNew={restart} onPrivacy={openPrivacy} onHelp={() => talkToExpert("Asked for help from the order tracker")} />
             )}
             {screen === "privacy" && <Privacy lang={lang} phone={phone} />}
           </div>
         )}
       </OwnerShell>
       {library}
+      {expertDialog}
     </>
   );
 }

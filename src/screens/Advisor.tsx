@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { blockText, businessLabel, needLabel, noteText, pName, summarise } from "../advisor/explain";
+import { businessLabel, needLabel, noteText, summarise } from "../advisor/explain";
 import {
-  ALL_NEEDS, COUNT_CHIPS, EMPLOYEE_CHIPS, INTERNET_CHIPS, mergeExtracted, NEED_ORDER, NET_NONE, nextStep, OTHER_PREFIX, segmentOf,
-  SITE_CHIPS, SPEED_CHIPS, SPEND_CHIPS, toProfile, type Draft, type Step,
+  ALL_NEEDS, clearField, COUNT_CHIPS, EMPLOYEE_CHIPS, INTERNET_CHIPS, mergeExtracted, NEED_ORDER, NET_NONE, nextStep, OTHER_PREFIX, segmentOf,
+  SITE_CHIPS, SKIPPABLE, skipStep, SPEED_CHIPS, SPEND_CHIPS, toProfile, type Draft, type Step, type UnderstoodField,
 } from "../advisor/flow";
 import { BUSINESS_TYPES, CITIES, QUICK_TYPES } from "../data/reference";
 import { maskId } from "../engine/gstin";
@@ -15,6 +15,7 @@ import { extract } from "../services/nlu";
 import { lookupGstin } from "../services/registry";
 import { IconSend } from "../components/ui";
 import { SegmentHero } from "../components/segment";
+import { LeftOut } from "../components/leftout";
 import { smartPrice } from "../engine/pricing";
 
 type Render = (lang: Lang) => string;
@@ -28,7 +29,7 @@ const QUESTION: Partial<Record<Step, Key>> = {
 const STATUS_HI: Record<string, string> = { Cancelled: "रद्द", Suspended: "निलंबित" };
 const COUNT_STEPS = ["employees", "sites", "lines", "cameras", "vehicles", "machines"] as const;
 
-export function Advisor({ lang, initialText, onQuote }: { lang: Lang; initialText?: string; onQuote: (p: Profile, r: Recommendation) => void }) {
+export function Advisor({ lang, initialText, onQuote, onRestart }: { lang: Lang; initialText?: string; onQuote: (p: Profile, r: Recommendation) => void; onRestart: () => void }) {
   const [draft, setDraft] = useState<Draft>({ preNeeds: [] });
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -41,6 +42,9 @@ export function Advisor({ lang, initialText, onQuote }: { lang: Lang; initialTex
   const idRef = useRef(0);
   const asked = useRef<string>("");
   const chatRef = useRef<HTMLDivElement>(null);
+  /** Snapshots taken before each answer, so Back can undo it. */
+  const history = useRef<{ draft: Draft; msgCount: number }[]>([]);
+  const [canBack, setCanBack] = useState(false);
   const step = nextStep(draft);
   const segment = segmentOf(draft);
 
@@ -71,6 +75,35 @@ export function Advisor({ lang, initialText, onQuote }: { lang: Lang; initialTex
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (initialText) void handleText(initialText); }, []);
   useEffect(() => { chatRef.current?.scrollTo({ top: chatRef.current.scrollHeight }); }, [msgs, step]);
+
+  function snapshot() {
+    history.current.push({ draft, msgCount: msgs.length });
+    setCanBack(true);
+  }
+  function back() {
+    const prev = history.current.pop();
+    if (!prev || busy) return;
+    setCanBack(history.current.length > 0);
+    asked.current = nextStep(prev.draft);
+    const ps = nextStep(prev.draft);
+    if (ps === "needs") setPicked(prev.draft.needs ?? prev.draft.preNeeds);
+    if (ps === "internet") { setNets(prev.draft.currentInternet ?? []); setOtherOpen(false); }
+    setMsgs((m) => m.slice(0, prev.msgCount));
+    setDraft(prev.draft);
+  }
+  function skip() {
+    if (busy || !SKIPPABLE.includes(step)) return;
+    snapshot();
+    user((l) => t(l, "ad_skip"));
+    bot("r_skipped");
+    setDraft((d) => skipStep(d, step));
+  }
+  function edit(field: UnderstoodField, label: Render) {
+    if (busy) return;
+    snapshot();
+    say("bot", (l) => t(l, "r_edit", { field: label(l) }));
+    setDraft((d) => clearField(d, field));
+  }
 
   async function runGstin(gstin: string, base: Draft) {
     setBusy(true);
@@ -110,6 +143,7 @@ export function Advisor({ lang, initialText, onQuote }: { lang: Lang; initialTex
     if (!text || busy) return;
     // On the internet question, typed text is one more "Other" answer; Done sends them all.
     if (nextStep(draft) === "internet") { addOther(text); setInput(""); return; }
+    snapshot();
     user(text);
     setInput("");
     const cur = nextStep(draft);
@@ -145,6 +179,7 @@ export function Advisor({ lang, initialText, onQuote }: { lang: Lang; initialTex
 
   function choose(label: string | Render, update: Partial<Draft>, after?: () => void) {
     if (busy) return;
+    snapshot();
     user(label);
     after?.();
     setDraft((d) => ({ ...d, ...update }));
@@ -205,17 +240,10 @@ export function Advisor({ lang, initialText, onQuote }: { lang: Lang; initialTex
 
   return (
     <>
-      {draft.businessTypeId && (
+      {msgs.some((m) => m.from === "user") && (
         <div className="profile-strip" lang={lang}>
-          <SegmentHero segment={segment} lang={lang} compact />
-          <div className="facts-strip" aria-label={t(lang, "building")}>
-            {draft.city && <span>{lang === "hi" ? CITIES.find((c) => c.city === draft.city)?.hi ?? draft.city : draft.city}</span>}
-            {draft.employees !== undefined && <span>{t(lang, "people", { n: draft.employees })}</span>}
-            {draft.sites !== undefined && <span>{draft.sites === 1 ? t(lang, "site_1") : t(lang, "sites_n", { n: draft.sites })}</span>}
-            {draft.gst && draft.gst !== "awaiting" && <span>{draft.gst === "Active" || draft.gst === "later" ? t(lang, "hasGst") : t(lang, "noGst")}</span>}
-            {draft.monthlySpend !== undefined && <span className="num">{inr(draft.monthlySpend)}{t(lang, "perMonth")}</span>}
-            {(draft.needs ?? draft.preNeeds).length > 0 && <span>{(draft.needs ?? draft.preNeeds).length} ✓</span>}
-          </div>
+          {draft.businessTypeId && <SegmentHero segment={segment} lang={lang} compact />}
+          <Understood lang={lang} draft={draft} step={step} onEdit={edit} />
         </div>
       )}
       <div className="chat" ref={chatRef} aria-live="polite" lang={lang}>
@@ -227,10 +255,17 @@ export function Advisor({ lang, initialText, onQuote }: { lang: Lang; initialTex
         ) : (
           <div key={m.id} className={`msg ${m.from} ${m.tone ?? ""}`}>{m.render(lang)}</div>
         ))}
-        {busy && <div className="typing">…</div>}
+        {busy && <div className="typing" role="status" aria-label={t(lang, "pl_typing")}><i /><i /><i /></div>}
       </div>
+      <div className="dock" lang={lang}>
+        <div className="dock-tools">
+          <button className="textbtn" onClick={back} disabled={!canBack || busy}>← {t(lang, "ad_back_step")}</button>
+          {SKIPPABLE.includes(step) && <button className="textbtn" onClick={skip} disabled={busy}>{t(lang, "ad_skip")} →</button>}
+          <span className="spacer" />
+          <button className="textbtn" onClick={onRestart}>{t(lang, "startOver")}</button>
+        </div>
       {step !== "done" && (
-        <div className="dock" lang={lang}>
+        <>
           {step === "internet" ? (
             <>
               <div className="chips" role="group" aria-label={t(lang, "q_internet")}>
@@ -271,8 +306,9 @@ export function Advisor({ lang, initialText, onQuote }: { lang: Lang; initialTex
             <input id="chat-input" className="input" value={input} onChange={(e) => setInput(e.target.value)} placeholder={t(lang, "placeholder")} autoComplete="off" />
             <button className="send" type="submit" disabled={!input.trim() || busy} aria-label={t(lang, "send")}><IconSend /></button>
           </form>
-        </div>
+        </>
       )}
+      </div>
     </>
   );
 }
@@ -292,19 +328,42 @@ function RecCard({ lang, profile, rec, onQuote }: { lang: Lang; profile: Profile
         </div>
       ))}
       {rec.notes.map((n, i) => <div key={i} className="notice info">{noteText(n, lang)}</div>)}
-      {rec.blocked.length > 0 && (
-        <div className="notice blocked">
-          <strong>{t(lang, "notIncluded")}</strong>
-          <ul>{rec.blocked.map((b) => <li key={b.productId}>{pName(b.productId)}: {b.blocks.map((x) => blockText(x, lang)).join("; ")}{b.alternative ? `. ${t(lang, "insteadAdded", { product: pName(b.alternative) })}` : ""}</li>)}</ul>
-          {rec.blocked.some((b) => b.blocks.some((x) => x.code === "gstin")) && <span>{t(lang, "gstTip")}</span>}
-        </div>
-      )}
+      <LeftOut rec={rec} lang={lang} />
       <div className="total">
         <span>{t(lang, "sp_your")}</span>
         <span className="rec-price"><s className="num">{inr(sp.standard)}</s> <b className="num">{inr(sp.monthly)}</b></span>
       </div>
       {profile.monthlySpend ? <p className="fine" style={{ margin: 0 }}>{t(lang, "vsSpend", { cur: inr(profile.monthlySpend) })}</p> : null}
       <button className="primary" onClick={onQuote}>{t(lang, "seeQuote")}</button>
+    </section>
+  );
+}
+
+/** Editable summary of what the advisor has understood so far. Tapping a fact asks that question again. */
+function Understood({ lang, draft, step, onEdit }: { lang: Lang; draft: Draft; step: Step; onEdit: (f: UnderstoodField, label: Render) => void }) {
+  const unknown = t(lang, "un_unknown");
+  const gst = draft.gst === undefined || draft.gst === "awaiting" ? unknown
+    : draft.gst === "Active" || draft.gst === "later" ? t(lang, "un_yes") : t(lang, "un_no");
+  const goals = draft.needs ?? (draft.preNeeds.length ? draft.preNeeds : undefined);
+  const city = draft.city ? (lang === "hi" ? CITIES.find((c) => c.city === draft.city)?.hi ?? draft.city : draft.city) : draft.tier ? t(lang, "otherCity") : unknown;
+  const items: { f: UnderstoodField; k: Key; v: string; asking: boolean }[] = [
+    { f: "business", k: "un_business", v: draft.businessTypeId ? businessLabel(draft.businessTypeId, lang) : unknown, asking: step === "business" },
+    { f: "city", k: "un_city", v: city, asking: step === "city" },
+    { f: "staff", k: "un_staff", v: draft.employees !== undefined ? String(draft.employees) : unknown, asking: step === "employees" },
+    { f: "gst", k: "un_gst", v: gst, asking: step === "gstin" || step === "gstin_type" },
+    { f: "goals", k: "un_goals", v: goals ? goals.slice(0, 2).map((n) => needLabel(n, lang)).join(", ") + (goals.length > 2 ? ` +${goals.length - 2}` : "") : unknown, asking: step === "needs" },
+  ];
+  return (
+    <section className="understood" aria-label={t(lang, "un_title")}>
+      <div className="understood-head"><b>{t(lang, "un_title")}</b><span className="fine">{t(lang, "un_hint")}</span></div>
+      <div className="facts-strip">
+        {items.map((it) => (
+          <button key={it.f} onClick={() => onEdit(it.f, (l) => t(l, it.k))} disabled={it.asking}
+            aria-label={`${t(lang, it.k)}: ${it.v}. ${t(lang, "un_edit", { field: t(lang, it.k) })}`}>
+            <small>{t(lang, it.k)}</small>{it.v}
+          </button>
+        ))}
+      </div>
     </section>
   );
 }

@@ -4,7 +4,7 @@
  */
 import { readList, writeList } from "./store";
 
-export type LeadStage = "quote" | "kyc" | "contract" | "payment";
+export type LeadStage = "advisor" | "quote" | "consent" | "kyc" | "contract" | "payment" | "track";
 export interface AppLead {
   id: string;
   createdAt: string;

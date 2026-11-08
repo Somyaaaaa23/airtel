@@ -1,10 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { blockText, joinList, noteText, pBlurb, pName, reasonText, unitLabel } from "../advisor/explain";
 import { product } from "../engine/catalogue";
 import { checkDependency, dependentsOf } from "../engine/eligibility";
 import { computeQuote } from "../engine/quote";
 import { defaultPlan } from "../engine/recommend";
-import { smartPrice, unitOffer } from "../engine/pricing";
+import { perDay, smartPrice, unitOffer } from "../engine/pricing";
+import { formatCountdown, heldUntil, holdPrice, quoteSignature } from "../services/priceHold";
+import { quoteShareText, whatsappUrl } from "../services/share";
+import { LeftOut } from "../components/leftout";
+import { onGroupKeys } from "../a11y/keys";
 import { Peers, SegmentHero, SegmentInsight, SmartPriceCard } from "../components/segment";
 import type { LineItem, Plan, Profile, Recommendation } from "../engine/types";
 import { inr, t, type Lang } from "../i18n/strings";
@@ -28,12 +32,26 @@ export function Quote({ lang, profile, rec, onKyc, onExpert }: {
   };
   const [rows, setRows] = useState<Row[]>(() => rowsFor(initialPlan));
   const [confirmFor, setConfirmFor] = useState<string | null>(null);
+  const [period, setPeriod] = useState<"month" | "day">("month");
+  const [now, setNow] = useState(() => Date.now());
 
   const active = rows.filter((r) => r.on);
   const activeIds = active.map((r) => r.productId);
   const quote = useMemo(() => computeQuote(active), [rows]); // eslint-disable-line react-hooks/exhaustive-deps
   const sp = useMemo(() => smartPrice(active, profile), [rows]); // eslint-disable-line react-hooks/exhaustive-deps
   const result: QuoteResult = { items: active.map(({ productId, qty }) => ({ productId, qty })), profile };
+  const money = (n: number) => inr(period === "day" ? perDay(n) : n);
+  const per = t(lang, period === "day" ? "perDay" : "perMonth");
+  const sig = quoteSignature(result.items, profile);
+  const [holdTick, setHoldTick] = useState(0);
+  const until = useMemo(() => heldUntil(sig, now), [sig, holdTick, now]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!until) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [until]);
+  const untilText = until ? new Date(until).toLocaleString(lang === "hi" ? "hi-IN" : "en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) : undefined;
+  const share = whatsappUrl(quoteShareText(lang, result.items, sp.monthly, sp.standard, untilText));
 
   const switchPlan = (key: Plan["key"]) => { setPlanKey(key); setRows(rowsFor(key)); setConfirmFor(null); };
   const setOn = (ids: string[], on: boolean) => setRows((rs) => rs.map((r) => (ids.includes(r.productId) ? { ...r, on } : r)));
@@ -65,8 +83,8 @@ export function Quote({ lang, profile, rec, onKyc, onExpert }: {
           <span className={`why ${r.optional ? "addon" : ""}`} id={`why-${r.productId}`}>{depBlock ? blockText(depBlock, lang) : reasonText(r.reason, lang)}</span>
         </label>
         <div className="price">
-          <span className="num">{unitOffer(p.id, profile) < p.priceMax && <s className="was">{inr(p.priceMax * r.qty)}</s>}{inr(unitOffer(p.id, profile) * r.qty)}</span>
-          <small className="num">{r.qty > 1 ? `${r.qty} × ${inr(unitOffer(p.id, profile))}` : `${inr(unitOffer(p.id, profile))} ${unitLabel(p.id, lang)}`}</small>
+          <span className="num">{unitOffer(p.id, profile) < p.priceMax && <s className="was">{money(p.priceMax * r.qty)}</s>}{money(unitOffer(p.id, profile) * r.qty)}</span>
+          <small className="num">{r.qty > 1 ? `${r.qty} × ${money(unitOffer(p.id, profile))}` : `${money(unitOffer(p.id, profile))} ${unitLabel(p.id, lang)}`}{period === "day" ? ` ${per}` : ""}</small>
           {PER_SITE.has(p.unit) ? (
             r.qty > 1 && <div className="fixedqty">{unitLabel(p.id, lang)}</div>
           ) : (
@@ -94,18 +112,31 @@ export function Quote({ lang, profile, rec, onKyc, onExpert }: {
     <>
       <main className="scroll" lang={lang}>
         <SegmentHero segment={profile.segment} lang={lang} />
+        <div className="seg-toggle" role="radiogroup" aria-label={t(lang, "qt_period")} onKeyDown={(e) => onGroupKeys(e, true)}>
+          {(["month", "day"] as const).map((x) => (
+            <button key={x} role="radio" aria-checked={period === x} onClick={() => setPeriod(x)}>{t(lang, x === "month" ? "qt_month" : "qt_day")}</button>
+          ))}
+        </div>
         {rec.plans.length > 1 && (
-          <div className="tiers" role="tablist">
+          <div className="tiers" role="tablist" onKeyDown={(e) => onGroupKeys(e, true)}>
             {planTotals.map((p) => (
               <button key={p.key} role="tab" className="tier" aria-selected={planKey === p.key} onClick={() => switchPlan(p.key)}>
                 <span>{t(lang, p.key === "recommended" ? "plan_recommended" : p.key === "pro" ? "plan_pro" : "plan_starter")}</span>
-                <b className="num">{inr(p.monthly)}</b>
+                <b className="num">{money(p.monthly)}</b>
                 <small>{t(lang, "tier_items", { n: p.count })} · −{p.saving}%</small>
               </button>
             ))}
           </div>
         )}
-        <SmartPriceCard sp={sp} profile={profile} lang={lang} />
+        <SmartPriceCard sp={sp} profile={profile} lang={lang} period={period} />
+        <div className="quote-tools">
+          {until ? (
+            <p className="hold-on" role="status"><b className="num">{t(lang, "qt_held", { time: formatCountdown(until - now) })}</b><span className="fine">{t(lang, "qt_held_until", { date: untilText! })}</span></p>
+          ) : (
+            <button className="secondary" onClick={() => { holdPrice(sig); setNow(Date.now()); setHoldTick((x) => x + 1); }}>{t(lang, "qt_hold")}</button>
+          )}
+          <a className="secondary wa" href={share} target="_blank" rel="noopener noreferrer">{t(lang, "qt_share")}</a>
+        </div>
         {initialPlan === "starter" && planKey === "starter" && profile.monthlySpend
           ? <div className="notice info">{t(lang, "budgetNote", { cur: inr(profile.monthlySpend) })}</div> : null}
         {rec.notes.map((n, i) => <div key={i} className="notice info">{noteText(n, lang)}</div>)}
@@ -117,13 +148,7 @@ export function Quote({ lang, profile, rec, onKyc, onExpert }: {
           {rows.filter((r) => r.optional).map(renderRow)}
         </section>
 
-        {rec.blocked.length > 0 && (
-          <div className="notice blocked">
-            <strong>{t(lang, "notIncluded")}</strong>
-            <ul>{rec.blocked.map((b) => <li key={b.productId}>{pName(b.productId)}: {b.blocks.map((x) => blockText(x, lang)).join("; ")}{b.alternative ? `. ${t(lang, "insteadAdded", { product: pName(b.alternative) })}` : ""}</li>)}</ul>
-            {rec.blocked.some((b) => b.blocks.some((x) => x.code === "gstin")) && <span>{t(lang, "gstTip")}</span>}
-          </div>
-        )}
+        <LeftOut rec={rec} lang={lang} />
 
         <div className="facts">
           <div className="fact"><span>{t(lang, "setup")}</span><b className="num">{sp.setupFull ? <>{sp.setupPayable < sp.setupFull && <s>{inr(sp.setupFull)}</s>} {inr(sp.setupPayable)}</> : t(lang, "noSetup")}</b></div>
@@ -159,8 +184,8 @@ export function Quote({ lang, profile, rec, onKyc, onExpert }: {
       <footer className="footer" lang={lang}>
         <div className="sum">
           <div>
-            <div className="fine">{t(lang, "sp_your")} · <s className="num">{inr(sp.standard)}</s></div>
-            <div className="big num">{inr(sp.monthly)}<small>{t(lang, "perMonth")}</small></div>
+            <div className="fine">{t(lang, "sp_your")} · <s className="num">{money(sp.standard)}</s></div>
+            <div className="big num">{money(sp.monthly)}<small>{per}</small></div>
           </div>
           <div className="side">
             <div>{t(lang, "dueToday")}: <b className="num">{inr(sp.firstPayment)}</b></div>

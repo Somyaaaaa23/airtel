@@ -24,3 +24,14 @@ export function parseCsv(text: string): Record<string, string>[] {
   const [header, ...body] = rows;
   return body.map((r) => Object.fromEntries(header.map((h, j) => [h, r[j] ?? ""])));
 }
+
+/** Rows to CSV text (RFC 4180 quoting), columns in the order of the first row's keys. */
+export function toCsv(rows: Record<string, string | number | boolean | null | undefined>[]): string {
+  if (!rows.length) return "";
+  const cols = Object.keys(rows[0]);
+  const cell = (v: unknown) => {
+    const s = v === null || v === undefined ? "" : String(v);
+    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  return [cols.map(cell).join(","), ...rows.map((r) => cols.map((c) => cell(r[c])).join(","))].join("\n") + "\n";
+}

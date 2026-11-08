@@ -1,17 +1,30 @@
 /**
- * Landing: one split card. Left, a coral welcome panel; right, a sign-in panel where the visitor picks who they are
- * (business owner or Accel team) and continues.
+ * Landing: one split card. Left, a red welcome panel; right, a sign-in panel where the visitor picks who they are
+ * (business owner or Accel team). Demo mode reveals sample businesses, the staff login and a reset.
  */
 import { useState } from "react";
 import { Icon, IconArrow, LangToggle } from "../components/ui";
 import { t, type Lang } from "../i18n/strings";
+import { DEMO_STAFF } from "../services/admin";
 
 type Role = "owner" | "team";
 
-export function Start({ lang, setLang, onOwner, onAdmin, onPrivacy, onDemos }: {
+function TrustStrip({ lang, className = "" }: { lang: Lang; className?: string }) {
+  return (
+    <ul className={`trust ${className}`}>
+      <li>{t(lang, "tr_catalogue")}</li>
+      <li>{t(lang, "tr_novisit")}</li>
+      <li>{t(lang, "tr_dpdp")}</li>
+    </ul>
+  );
+}
+
+export function Start({ lang, setLang, onOwner, onAdmin, onPrivacy, onDemos, demoMode, setDemoMode, onReset }: {
   lang: Lang; setLang: (l: Lang) => void; onOwner: () => void; onAdmin: () => void; onPrivacy: () => void; onDemos: () => void;
+  demoMode: boolean; setDemoMode: (on: boolean) => void; onReset: () => void;
 }) {
   const [role, setRole] = useState<Role>("owner");
+  const [resetNote, setResetNote] = useState("");
   const options: { id: Role; icon: string; title: string; sub: string }[] = [
     { id: "owner", icon: "owner", title: t(lang, "st_owner"), sub: t(lang, "st_owner_sub") },
     { id: "team", icon: "team", title: t(lang, "st_admin"), sub: t(lang, "st_admin_sub") },
@@ -31,11 +44,7 @@ export function Start({ lang, setLang, onOwner, onAdmin, onPrivacy, onDemos }: {
             <span className="split-kicker">{t(lang, "si_welcome")}</span>
             <h1 id="welcome-t">{t(lang, "heroA")} <em>{t(lang, "heroB")}</em></h1>
             <p>{t(lang, "tagline")}</p>
-            <ul className="split-proof">
-              <li>{t(lang, "st_p1")}</li>
-              <li>{t(lang, "st_p2")}</li>
-              <li>{t(lang, "st_p3")}</li>
-            </ul>
+            <TrustStrip lang={lang} />
           </div>
         </section>
 
@@ -51,7 +60,7 @@ export function Start({ lang, setLang, onOwner, onAdmin, onPrivacy, onDemos }: {
           <fieldset className="role-pick">
             <legend className="vh">{t(lang, "st_title")}</legend>
             {options.map((o) => (
-              <label key={o.id} className={`role-opt ${role === o.id ? "on" : ""}`} data-role={o.id}>
+              <label key={o.id} className={`role-opt ${role === o.id ? "on" : ""}`}>
                 <input type="radio" name="role" value={o.id} checked={role === o.id} onChange={() => setRole(o.id)} className="vh" />
                 <span className="role-opt-ic" aria-hidden="true"><Icon name={o.icon} size={22} /></span>
                 <span className="role-opt-text"><b>{o.title}</b><span>{o.sub}</span></span>
@@ -63,11 +72,32 @@ export function Start({ lang, setLang, onOwner, onAdmin, onPrivacy, onDemos }: {
           <button className="primary split-go" onClick={role === "owner" ? onOwner : onAdmin}>
             {role === "owner" ? t(lang, "st_owner_cta") : t(lang, "st_admin_cta")} <IconArrow />
           </button>
+          <TrustStrip lang={lang} className="on-light mobile-only" />
 
-          <div className="or">{lang === "hi" ? "या" : "or"}</div>
-          <button className="secondary" onClick={onDemos}>{t(lang, "si_demo")}</button>
+          <div className="split-row">
+            <label className="switch">
+              <input type="checkbox" checked={demoMode} onChange={(e) => { setDemoMode(e.target.checked); setResetNote(""); }} aria-describedby="demo-hint" />
+              <span className="track" aria-hidden="true" />
+              {t(lang, "dm_mode")}
+            </label>
+            <button className="textbtn privacy-link" onClick={onPrivacy}>{t(lang, "privacyLink")}</button>
+          </div>
+          <span id="demo-hint" className="vh">{t(lang, "dm_mode_hint")}</span>
 
-          <button className="textbtn privacy-link split-privacy" onClick={onPrivacy}>{t(lang, "privacyLink")}</button>
+          {demoMode && (
+            <div className="demo-box" aria-label={t(lang, "dm_mode")}>
+              <button className="secondary" onClick={onDemos}>{t(lang, "si_demo")}</button>
+              <div>
+                <span className="eyebrow">{t(lang, "dm_staff")}</span>
+                <dl>
+                  <dt>{t(lang, "dm_email")}</dt><dd>{DEMO_STAFF.email}</dd>
+                  <dt>{t(lang, "dm_password")}</dt><dd>{DEMO_STAFF.password}</dd>
+                </dl>
+              </div>
+              <button className="textbtn start-self" onClick={() => { onReset(); setResetNote(t(lang, "dm_reset_done")); }}>{t(lang, "dm_reset")}</button>
+              <p className="fine" role="status" aria-live="polite">{resetNote}</p>
+            </div>
+          )}
         </section>
       </div>
     </main>
