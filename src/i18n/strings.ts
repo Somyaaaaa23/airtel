@@ -712,6 +712,9 @@ const en = {
   pl_err_b: "This screen couldn't load. Your answers on this device are safe.",
   pl_err_retry: "Reload",
   pl_err_home: "Back to start",
+  unit_min: "min",
+  dm_eyebrow: "Demo",
+  gr_name: "Grievance Officer, Accel Business",
 };
 
 export type Key = keyof typeof en;
@@ -1407,6 +1410,9 @@ const hi: Record<Key, string> = {
   pl_err_b: "यह स्क्रीन लोड नहीं हो सकी। इस डिवाइस पर आपके जवाब सुरक्षित हैं।",
   pl_err_retry: "फिर से लोड करें",
   pl_err_home: "शुरुआत पर वापस",
+  unit_min: "मिनट",
+  dm_eyebrow: "डेमो",
+  gr_name: "शिकायत अधिकारी, Accel Business",
 };
 
 export const STRINGS: Record<Lang, Record<Key, string>> = { en, hi };
@@ -1485,3 +1491,15 @@ export const inr = (n: number) => "₹" + n.toLocaleString("en-IN");
 /** "26 Jun 2026" / "26 जून 2026" from an ISO date. */
 export const fmtDate = (iso: string, lang: Lang, weekday = false) =>
   new Date(`${iso}T00:00:00`).toLocaleDateString(lang === "hi" ? "hi-IN" : "en-IN", { day: "numeric", month: "short", year: weekday ? undefined : "numeric", weekday: weekday ? "short" : undefined });
+
+/** Indian states and union territories in Hindi, for addresses, registry checks and the application card. */
+export const STATE_HI: Record<string, string> = {
+  "Andhra Pradesh": "आंध्र प्रदेश", "Arunachal Pradesh": "अरुणाचल प्रदेश", "Assam": "असम", "Bihar": "बिहार", "Chhattisgarh": "छत्तीसगढ़",
+  "Goa": "गोवा", "Gujarat": "गुजरात", "Haryana": "हरियाणा", "Himachal Pradesh": "हिमाचल प्रदेश", "Jharkhand": "झारखंड", "Karnataka": "कर्नाटक",
+  "Kerala": "केरल", "Madhya Pradesh": "मध्य प्रदेश", "Maharashtra": "महाराष्ट्र", "Manipur": "मणिपुर", "Meghalaya": "मेघालय", "Mizoram": "मिज़ोरम",
+  "Nagaland": "नागालैंड", "Odisha": "ओडिशा", "Punjab": "पंजाब", "Rajasthan": "राजस्थान", "Sikkim": "सिक्किम", "Tamil Nadu": "तमिलनाडु",
+  "Telangana": "तेलंगाना", "Tripura": "त्रिपुरा", "Uttar Pradesh": "उत्तर प्रदेश", "Uttarakhand": "उत्तराखंड", "West Bengal": "पश्चिम बंगाल",
+  "Delhi": "दिल्ली", "Jammu and Kashmir": "जम्मू और कश्मीर", "Ladakh": "लद्दाख", "Puducherry": "पुडुचेरी", "Chandigarh": "चंडीगढ़",
+  "Andaman and Nicobar Islands": "अंडमान और निकोबार द्वीपसमूह", "Lakshadweep": "लक्षद्वीप", "Dadra and Nagar Haveli and Daman and Diu": "दादरा और नगर हवेली और दमन और दीव",
+};
+export const stateName = (state: string | undefined, lang: Lang) => (state && lang === "hi" ? STATE_HI[state] ?? state : state ?? "");

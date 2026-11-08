@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { fmtDate, t, type Key, type Lang } from "../i18n/strings";
-import { consentLog, currentConsent, GRIEVANCE, PURPOSES, withdrawConsent } from "../services/consent";
+import { consentLog, currentConsent, grievanceFor, PURPOSES, withdrawConsent } from "../services/consent";
 
 const SECTIONS = ["collect", "purpose", "keep", "secure", "rights"] as const;
 
@@ -15,7 +15,7 @@ export function Privacy({ lang, phone }: { lang: Lang; phone: string }) {
       {SECTIONS.map((s) => (
         <section key={s} className="consent">
           <h3>{t(lang, `pv_${s}_t` as Key)}</h3>
-          <p>{t(lang, `pv_${s}` as Key, GRIEVANCE)}</p>
+          <p>{t(lang, `pv_${s}` as Key, grievanceFor(lang))}</p>
         </section>
       ))}
       <section className="consent">

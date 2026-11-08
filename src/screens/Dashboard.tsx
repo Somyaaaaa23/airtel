@@ -9,7 +9,7 @@ import { goLiveDay, planTasks, type Order } from "../engine/orders";
 import { Icon, IconArrow } from "../components/ui";
 import type { NavKey } from "../components/OwnerShell";
 import { fmtDate, inr, t, type Key, type Lang } from "../i18n/strings";
-import { GRIEVANCE } from "../services/consent";
+import { GRIEVANCE, grievanceFor } from "../services/consent";
 
 type Channel = "internet" | "sim" | "comms" | "cloud" | "security" | "cctv";
 const CHANNELS: Channel[] = ["internet", "sim", "comms", "cloud", "security", "cctv"];
@@ -124,7 +124,7 @@ function Overview(p: DashProps) {
         </div>
         <dl className="hello-kpis">
           <div><dt><Icon name="internet" size={14} />{t(lang, "db_data")}</dt><dd className="num">{Math.round(u.used)}<small>GB</small></dd></div>
-          <div><dt><Icon name="comms" size={14} />{t(lang, "db_calls")}</dt><dd className="num">{u.calls}<small>min</small></dd></div>
+          <div><dt><Icon name="comms" size={14} />{t(lang, "db_calls")}</dt><dd className="num">{u.calls}<small>{t(lang, "unit_min")}</small></dd></div>
           <div><dt><Icon name="sim" size={14} />{t(lang, "db_sms")}</dt><dd className="num">{u.sms}</dd></div>
         </dl>
       </header>
@@ -466,7 +466,7 @@ function Support({ lang, canExpert, onExpert, orders, onTrack, onNav }: DashProp
         <section className="dcard">
           <span className="svc-ic" aria-hidden="true"><Icon name="privacy" /></span>
           <h3>{t(lang, "su_grievance")}</h3>
-          <dl className="kv"><dt>{t(lang, "pr_name")}</dt><dd>{GRIEVANCE.name}</dd><dt>Email</dt><dd>{GRIEVANCE.email}</dd><dt>{t(lang, "pr_phone")}</dt><dd className="num">{GRIEVANCE.phone}</dd></dl>
+          <dl className="kv"><dt>{t(lang, "pr_name")}</dt><dd>{grievanceFor(lang).name}</dd><dt>{t(lang, "dm_email")}</dt><dd>{GRIEVANCE.email}</dd><dt>{t(lang, "pr_phone")}</dt><dd className="num">{GRIEVANCE.phone}</dd></dl>
         </section>
       </div>
     </>

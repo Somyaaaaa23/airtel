@@ -3,7 +3,7 @@ import { product } from "../engine/catalogue";
 import { maskId } from "../engine/gstin";
 import { DOC_KINDS, parseDocument, runKyc, type Check, type DocKind, type KycResult, type ParsedDoc } from "../engine/kyc";
 import type { Order } from "../engine/orders";
-import { fmtDate, t, type Key, type Lang } from "../i18n/strings";
+import { fmtDate, stateName, t, type Key, type Lang } from "../i18n/strings";
 import { KYC_DEMOS } from "../data/demos";
 import { readDocument, readSpecimenSync, SPECIMENS, specimenImage } from "../services/ocr";
 import { KYC_REGISTRY } from "../services/registry";
@@ -35,6 +35,7 @@ function checkText(c: Check, lang: Lang): string {
   const doc = c.doc ? t(lang, `dk_${c.doc}` as Key) : "";
   const pf = c.status === "pass" ? "pass" : "fail";
   for (const k of ["date", "cutoff"]) if (typeof p[k] === "string" && p[k]) p[k] = fmtDate(p[k] as string, lang);
+  for (const k of ["gstState", "stated"]) if (typeof p[k] === "string") p[k] = stateName(p[k] as string, lang);
   switch (c.code) {
     case "missing": case "unreadable": return t(lang, `c_${c.code}`, { doc });
     case "wrong_kind": return t(lang, "c_wrong_kind", { doc, found: t(lang, `dk_${p.found}` as Key) });
@@ -243,12 +244,12 @@ export function Kyc({ lang, quote, applicant, onContinue, onExpert, draftKey, on
           <summary>{t(lang, "ks_sample")}{match ? ` · ${match} ${t(lang, "specMatch").toLowerCase()}` : ""}</summary>
           <div className="chips">
             {KYC_DEMOS.map((d) => (
-              <button key={d.id} className={`chip ${match === d.id ? "match" : ""}`} aria-pressed={specimen === d.id} onClick={() => { loadSpecimen(d.id); setStep(3); }} title={d.shows}>
+              <button key={d.id} className={`chip ${match === d.id ? "match" : ""}`} aria-pressed={specimen === d.id} onClick={() => { loadSpecimen(d.id); setStep(3); }} title={lang === "hi" ? d.showsHi : d.shows}>
                 {d.id}{match === d.id ? " ★" : ""}
               </button>
             ))}
           </div>
-          {specimen && <p className="fine specimen-note">{specimen}: {KYC_DEMOS.find((d) => d.id === specimen)?.shows}</p>}
+          {specimen && <p className="fine specimen-note">{specimen}: {(() => { const d = KYC_DEMOS.find((x) => x.id === specimen); return lang === "hi" ? d?.showsHi : d?.shows; })()}</p>}
         </details>
 
         <header className="step-head">
@@ -291,7 +292,7 @@ export function Kyc({ lang, quote, applicant, onContinue, onExpert, draftKey, on
               <h3>{t(lang, "appTitle")}</h3>
               {applicant && <span>{t(lang, "appSigner", { name: applicant })}</span>}
               {profile.gstin && <span className="num">{t(lang, "appGstin", { masked: maskId(profile.gstin.toUpperCase()) })}</span>}
-              {profile.state && <span>{t(lang, "appState", { state: profile.state })}</span>}
+              {profile.state && <span>{t(lang, "appState", { state: stateName(profile.state, lang) })}</span>}
             </section>
             {result ? (
               <>

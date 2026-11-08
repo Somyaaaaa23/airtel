@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { t, type Key, type Lang } from "../i18n/strings";
-import { GRIEVANCE, PURPOSES, recordConsent, type Purpose } from "../services/consent";
+import { grievanceFor, PURPOSES, recordConsent, type Purpose } from "../services/consent";
 
 /** DPDP consent: one checkbox per purpose, nothing pre-ticked, each with what / why / how long / who sees it. */
 export function Consent({ lang, phone, onDone, onPrivacy }: { lang: Lang; phone: string; onDone: () => void; onPrivacy: () => void }) {
@@ -25,7 +25,7 @@ export function Consent({ lang, phone, onDone, onPrivacy }: { lang: Lang; phone:
             </dl>
           </section>
         ))}
-        <p className="fine">{t(lang, "cs_withdraw", GRIEVANCE)}</p>
+        <p className="fine">{t(lang, "cs_withdraw", grievanceFor(lang))}</p>
         <button className="textbtn privacy-link" onClick={onPrivacy}>{t(lang, "privacyLink")}</button>
       </main>
       <footer className="footer" lang={lang}>

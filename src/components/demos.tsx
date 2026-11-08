@@ -6,21 +6,26 @@ import { useState } from "react";
 import { DEMOS, type Demo, type DemoCategory } from "../data/demos";
 import { runAllScenarios, type ScenarioResult } from "../services/scenarios";
 import { t, type Key, type Lang } from "../i18n/strings";
+import { CITIES } from "../data/reference";
 import { Icon, IconClose, Modal } from "./ui";
 import { onGroupKeys } from "../a11y/keys";
 
 const CAT_ICON: Record<DemoCategory, string> = { retail: "retail", health: "health", hosp: "hosp", mfg: "mfg", services: "services_cat" };
 const CATS: ("all" | DemoCategory)[] = ["all", "retail", "health", "hosp", "mfg", "services"];
 const catLabel = (lang: Lang, c: "all" | DemoCategory) => t(lang, `cat_${c}` as Key);
+const nameOf = (d: Demo, lang: Lang) => (lang === "hi" ? d.nameHi : d.name);
+const cityOf = (d: Demo, lang: Lang) => (lang === "hi" ? CITIES.find((c) => c.city === d.city)?.hi ?? d.city : d.city);
+const contextOf = (d: Demo, lang: Lang) => (lang === "hi" ? d.contextHi : d.context);
+const tagsOf = (d: Demo, lang: Lang) => (lang === "hi" ? d.tagsHi : d.tags);
 
 function ScenarioCard({ d, lang, onClick, pressed, showTags }: { d: Demo; lang: Lang; onClick: () => void; pressed?: boolean; showTags?: boolean }) {
   return (
     <button className="scn" data-cat={d.category} onClick={onClick} aria-pressed={pressed}>
       <span className="scn-ic" aria-hidden="true"><Icon name={CAT_ICON[d.category]} size={18} /></span>
-      <b>{d.name}</b>
-      <span className="meta">{d.city} · {catLabel(lang, d.category)}</span>
+      <b>{nameOf(d, lang)}</b>
+      <span className="meta">{cityOf(d, lang)} · {catLabel(lang, d.category)}</span>
       <span className="go">{pressed === undefined ? `${t(lang, "dm_try")} →` : ""}</span>
-      {showTags && <span className="tags"><span className="ctx">{d.context}</span>{d.tags.slice(0, 2).map((x) => <span key={x} className="tag">{x}</span>)}</span>}
+      {showTags && <span className="tags"><span className="ctx">{contextOf(d, lang)}</span>{tagsOf(d, lang).slice(0, 2).map((x) => <span key={x} className="tag">{x}</span>)}</span>}
     </button>
   );
 }
@@ -30,7 +35,7 @@ export function DemoPanel({ lang, onTry, onViewAll }: { lang: Lang; onTry: (text
   const featured = DEMOS.filter((d) => d.featured).slice(0, 4);
   return (
     <aside className="demo-panel" aria-labelledby="demo-panel-t">
-      <span className="eyebrow">Demo</span>
+      <span className="eyebrow">{t(lang, "dm_eyebrow")}</span>
       <h2 id="demo-panel-t">{t(lang, "dm_title")}</h2>
       <p>{t(lang, "dm_sub")}</p>
       <div className="scn-list">
@@ -52,7 +57,7 @@ export function DemoLibrary({ lang, onTry, onClose }: { lang: Lang; onTry: (text
   const [runErr, setRunErr] = useState(false);
   const q = query.trim().toLowerCase();
   const list = DEMOS.filter((d) => (cat === "all" || d.category === cat)
-    && (!q || [d.name, d.city, d.text, d.shows, ...d.tags, d.rule.code].join(" ").toLowerCase().includes(q)));
+    && (!q || [d.name, d.nameHi, d.city, cityOf(d, "hi"), d.text, d.shows, d.showsHi, ...d.tags, ...d.tagsHi, d.rule.code].join(" ").toLowerCase().includes(q)));
   const pick = DEMOS.find((d) => d.id === pickId) ?? DEMOS[0];
   const resultFor = (id: string) => results?.find((r) => r.id === id);
   const runAll = async () => {
@@ -104,7 +109,7 @@ export function DemoLibrary({ lang, onTry, onClose }: { lang: Lang; onTry: (text
                       const d = DEMOS.find((x) => x.id === r.id)!;
                       return (
                         <li key={r.id}>
-                          <b>{d.name} · {d.city}</b>
+                          <b>{nameOf(d, lang)} · {cityOf(d, lang)}</b>
                           <span className={`tag ${r.pass ? "in" : "out"}`}>{r.pass ? t(lang, "dm_pass") : t(lang, "dm_fail")}</span>
                           <span className="fine">{r.checks.map((c) => `${c.ok ? "✓" : "✕"} ${c.label}`).join(" · ")}</span>
                         </li>
@@ -117,13 +122,13 @@ export function DemoLibrary({ lang, onTry, onClose }: { lang: Lang; onTry: (text
           ) : (
             <>
               <div>
-                <span className="eyebrow">{pick.city} · {catLabel(lang, pick.category)} · {pick.context}</span>
-                <h3>{pick.name}</h3>
+                <span className="eyebrow">{cityOf(pick, lang)} · {catLabel(lang, pick.category)} · {contextOf(pick, lang)}</span>
+                <h3>{nameOf(pick, lang)}</h3>
               </div>
               <div><span className="eyebrow">{t(lang, "dm_says")}</span><p className="bubble">{pick.text}</p></div>
               <div><span className="eyebrow">{t(lang, "dm_shows")}</span><p className="what">{lang === "hi" ? pick.showsHi : pick.shows}</p></div>
               <div><span className="eyebrow">{t(lang, "dm_rule")}</span><p className="rule"><code>{pick.rule.code}</code></p><p className="fine">{lang === "hi" ? pick.rule.hi : pick.rule.en}</p></div>
-              <div className="chips">{pick.tags.map((x) => <span key={x} className="tag">{x}</span>)}</div>
+              <div className="chips">{tagsOf(pick, lang).map((x) => <span key={x} className="tag">{x}</span>)}</div>
             </>
           )}
         </div>
