@@ -7,6 +7,7 @@ import { DEMOS, type Demo, type DemoCategory } from "../data/demos";
 import { runAllScenarios, type ScenarioResult } from "../services/scenarios";
 import { t, type Key, type Lang } from "../i18n/strings";
 import { Icon, IconClose, Modal } from "./ui";
+import { onGroupKeys } from "../a11y/keys";
 
 const CAT_ICON: Record<DemoCategory, string> = { retail: "retail", health: "health", hosp: "hosp", mfg: "mfg", services: "services_cat" };
 const CATS: ("all" | DemoCategory)[] = ["all", "retail", "health", "hosp", "mfg", "services"];
@@ -72,7 +73,7 @@ export function DemoLibrary({ lang, onTry, onClose }: { lang: Lang; onTry: (text
       <div className="modal-tools">
         <label className="vh" htmlFor="scn-search">{t(lang, "dm_search")}</label>
         <input id="scn-search" className="input" type="search" placeholder={t(lang, "dm_search")} value={query} onChange={(e) => setQuery(e.target.value)} />
-        <div className="filters" role="group" aria-label="Filter">
+        <div className="filters" role="group" aria-label="Filter" onKeyDown={(e) => onGroupKeys(e)}>
           {CATS.map((c) => <button key={c} aria-pressed={cat === c} onClick={() => setCat(c)}>{catLabel(lang, c)}</button>)}
         </div>
       </div>

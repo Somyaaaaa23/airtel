@@ -8,6 +8,7 @@ import { perDay, smartPrice, unitOffer } from "../engine/pricing";
 import { formatCountdown, heldUntil, holdPrice, quoteSignature } from "../services/priceHold";
 import { quoteShareText, whatsappUrl } from "../services/share";
 import { LeftOut } from "../components/leftout";
+import { onGroupKeys } from "../a11y/keys";
 import { Peers, SegmentHero, SegmentInsight, SmartPriceCard } from "../components/segment";
 import type { LineItem, Plan, Profile, Recommendation } from "../engine/types";
 import { inr, t, type Lang } from "../i18n/strings";
@@ -111,13 +112,13 @@ export function Quote({ lang, profile, rec, onKyc, onExpert }: {
     <>
       <main className="scroll" lang={lang}>
         <SegmentHero segment={profile.segment} lang={lang} />
-        <div className="seg-toggle" role="radiogroup" aria-label={t(lang, "qt_period")}>
+        <div className="seg-toggle" role="radiogroup" aria-label={t(lang, "qt_period")} onKeyDown={(e) => onGroupKeys(e, true)}>
           {(["month", "day"] as const).map((x) => (
             <button key={x} role="radio" aria-checked={period === x} onClick={() => setPeriod(x)}>{t(lang, x === "month" ? "qt_month" : "qt_day")}</button>
           ))}
         </div>
         {rec.plans.length > 1 && (
-          <div className="tiers" role="tablist">
+          <div className="tiers" role="tablist" onKeyDown={(e) => onGroupKeys(e, true)}>
             {planTotals.map((p) => (
               <button key={p.key} role="tab" className="tier" aria-selected={planKey === p.key} onClick={() => switchPlan(p.key)}>
                 <span>{t(lang, p.key === "recommended" ? "plan_recommended" : p.key === "pro" ? "plan_pro" : "plan_starter")}</span>

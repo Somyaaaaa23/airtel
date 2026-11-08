@@ -706,6 +706,12 @@ const en = {
   tr_notify_on: "We'll message +91 {phone} on WhatsApp at every step.",
   tr_notify_off: "WhatsApp updates are off. You'll see updates here only.",
   tr_help: "Need help?",
+  pl_skip: "Skip to content",
+  pl_typing: "The advisor is typing",
+  pl_err_t: "Something went wrong",
+  pl_err_b: "This screen couldn't load. Your answers on this device are safe.",
+  pl_err_retry: "Reload",
+  pl_err_home: "Back to start",
 };
 
 export type Key = keyof typeof en;
@@ -1395,6 +1401,12 @@ const hi: Record<Key, string> = {
   tr_notify_on: "हर चरण पर हम +91 {phone} पर WhatsApp करेंगे।",
   tr_notify_off: "WhatsApp अपडेट बंद हैं। अपडेट सिर्फ़ यहाँ दिखेंगे।",
   tr_help: "मदद चाहिए?",
+  pl_skip: "सामग्री पर जाएँ",
+  pl_typing: "एडवाइज़र लिख रहा है",
+  pl_err_t: "कुछ गड़बड़ हो गई",
+  pl_err_b: "यह स्क्रीन लोड नहीं हो सकी। इस डिवाइस पर आपके जवाब सुरक्षित हैं।",
+  pl_err_retry: "फिर से लोड करें",
+  pl_err_home: "शुरुआत पर वापस",
 };
 
 export const STRINGS: Record<Lang, Record<Key, string>> = { en, hi };

@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { t, type Key, type Lang } from "../i18n/strings";
 import { Icon, IconBack, IconClose, IconMenu, IconSpark, LangToggle } from "./ui";
+import { onGroupKeys } from "../a11y/keys";
 
 export type NavKey = "overview" | "services" | "plan" | "usage" | "bills" | "orders" | "support" | "profile";
 const MAIN: NavKey[] = ["overview", "services", "plan", "usage", "bills", "orders", "support"];
@@ -30,6 +31,14 @@ export function OwnerShell({ lang, setLang, name, phone, title, active, onNav, o
   }, [menu]);
 
   const go = (k: NavKey) => { setNavOpen(false); onNav(k); };
+  const sideRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (!navOpen) return;
+    sideRef.current?.querySelector<HTMLElement>(".nav-item")?.focus();
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setNavOpen(false); };
+    document.addEventListener("keydown", esc);
+    return () => document.removeEventListener("keydown", esc);
+  }, [navOpen]);
   const drawerItem = (k: NavKey) => (
     <button key={k} className="nav-item" aria-current={active === k ? "page" : undefined} onClick={() => go(k)}>
       <Icon name={k} size={18} /><span>{t(lang, `nav_${k}` as Key)}</span>
@@ -38,7 +47,8 @@ export function OwnerShell({ lang, setLang, name, phone, title, active, onNav, o
 
   return (
     <div className={`ws ${navOpen ? "nav-open" : ""}`} lang={lang}>
-      <aside className="ws-side" aria-label="Main">
+      <a className="skip" href="#main-content">{t(lang, "pl_skip")}</a>
+      <aside className="ws-side" aria-label="Main" ref={sideRef} aria-hidden={!navOpen || undefined}>
         <nav className="ws-nav">{MAIN.map(drawerItem)}</nav>
         <nav className="ws-nav" aria-label="Account">
           {demoMode && <button className="nav-item" onClick={() => { setNavOpen(false); onOpenDemos(); }}><IconSpark /><span>{t(lang, "nav_demos")}</span></button>}
@@ -56,7 +66,7 @@ export function OwnerShell({ lang, setLang, name, phone, title, active, onNav, o
             {navOpen ? <IconClose /> : <IconMenu />}
           </button>
           <button className="wordmark" onClick={() => go("overview")}>Udyam Digital</button>
-          <nav className="pillnav" aria-label="Main">
+          <nav className="pillnav" aria-label="Main" onKeyDown={(e) => onGroupKeys(e)}>
             {MAIN.map((k) => (
               <button key={k} aria-current={active === k ? "page" : undefined} onClick={() => go(k)}>{t(lang, SHORT[k] ?? (`nav_${k}` as Key))}</button>
             ))}
@@ -84,7 +94,7 @@ export function OwnerShell({ lang, setLang, name, phone, title, active, onNav, o
             {actions}
           </div>
         )}
-        <main className={`ws-main ${flowing ? "flowing" : ""}`}>{children}</main>
+        <main id="main-content" tabIndex={-1} className={`ws-main ${flowing ? "flowing" : ""}`}>{children}</main>
       </div>
     </div>
   );

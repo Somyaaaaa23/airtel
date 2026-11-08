@@ -185,7 +185,8 @@ export function Kyc({ lang, quote, applicant, onContinue, onExpert, draftKey, on
           </div>
           <button className="upload" onClick={() => setCamFor(kind)}>{t(lang, s ? "replace" : "upload")}</button>
         </div>
-        {s?.status === "error" && <p className="doc-err">{t(lang, "cantRead")}</p>}
+        {s?.status === "reading" && <div className="skeleton-lines" role="status" aria-label={t(lang, "reading")}><i className="skeleton" /><i className="skeleton" /><i className="skeleton short" /></div>}
+        {s?.status === "error" && <p className="doc-err" role="alert">{t(lang, "cantRead")}</p>}
         {s?.parsed?.readable && (
           <>
             <dl className="fields">

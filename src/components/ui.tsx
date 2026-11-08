@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type { Lang } from "../i18n/strings";
+import { cycleFocus, FOCUSABLE, onGroupKeys } from "../a11y/keys";
 
 const svg = (d: ReactNode, size = 22) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{d}</svg>
@@ -46,7 +47,7 @@ export function Icon({ name, size = 20 }: { name: string; size?: number }) {
 
 export function LangToggle({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void }) {
   return (
-    <div className="lang" role="group" aria-label="Language / भाषा">
+    <div className="lang" role="group" aria-label="Language / भाषा" onKeyDown={(e) => onGroupKeys(e, true)}>
       <button aria-pressed={lang === "en"} onClick={() => setLang("en")}>EN</button>
       <button aria-pressed={lang === "hi"} onClick={() => setLang("hi")} lang="hi">हि</button>
     </div>
@@ -67,7 +68,13 @@ export function Modal({ label, onClose, children, className = "" }: { label: str
   useEffect(() => {
     const before = document.activeElement as HTMLElement | null;
     ref.current?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") closeRef.current(); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { closeRef.current(); return; }
+      if (e.key !== "Tab" || !ref.current) return;
+      const items = [...ref.current.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((el) => el.offsetParent !== null);
+      const next = cycleFocus(items.indexOf(document.activeElement as HTMLElement), items.length, e.shiftKey);
+      if (next >= 0) { e.preventDefault(); items[next].focus(); }
+    };
     document.addEventListener("keydown", onKey);
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";

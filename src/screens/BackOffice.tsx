@@ -14,6 +14,7 @@ import { Brand } from "../components/ui";
 import { CallNext, ConsentPanel, HeatTag, KycReview } from "./BackOfficeQueues";
 import { Def, LeakFinder, Overview, Segments, Simulator, type RangeData } from "./CommandCentre";
 import { toCsv } from "../engine/csv";
+import { onGroupKeys } from "../a11y/keys";
 import { topLeaks } from "../engine/diagnose";
 import type { LossKind } from "../engine/lossCategories";
 import type { MetricId } from "../engine/metricDefs";
@@ -92,9 +93,10 @@ export function BackOffice({ admin, onSignOut }: { admin: string; onSignOut: () 
 
   return (
     <div className="bo bo-layout">
+      <a className="skip" href="#main-content">Skip to content</a>
       <aside className="bo-side">
         <Brand sub="Accel · Command centre" />
-        <nav className="bo-nav" aria-label="Command centre">
+        <nav className="bo-nav" aria-label="Command centre" onKeyDown={(e) => onGroupKeys(e)}>
           {TABS.map((x) => (
             <button key={x.id} aria-current={tab === x.id ? "page" : undefined} onClick={() => { setTab(x.id); window.scrollTo(0, 0); }}>
               <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={x.icon} /></svg>
@@ -110,7 +112,7 @@ export function BackOffice({ admin, onSignOut }: { admin: string; onSignOut: () 
         </div>
       </aside>
 
-      <div className="bo-main">
+      <div className="bo-main" id="main-content" tabIndex={-1}>
       <header className="bo-head">
         <div>
           <span className="eyebrow">Accel Business · Command centre</span>

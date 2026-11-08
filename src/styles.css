@@ -1093,3 +1093,33 @@ button { cursor: pointer; }
   .role-opt-text span { display: none; }
 }
 @media (min-width: 481px) { .trust.on-light.mobile-only { display: none; } }
+
+/* ---------- Polish: touch targets, focus, skeletons, skip link, error screen ---------- */
+/* Every control is at least 44×44 px to tap. */
+.textbtn, .link-arrow, .chip, .lang button, .filters button, .pillnav button, .menu button, .st-go, .seg-toggle button,
+.upload, .stepper button, .sample summary, .trace summary, .how summary, .roundbtn.sm, .agree, .slider input, .lever input { min-height: 44px; }
+.roundbtn.sm, .stepper button, .lang button { min-width: 44px; }
+.st-go, .link-arrow { padding-inline: 12px; }
+.link-arrow { padding-inline: 0; }
+.check { width: 22px; height: 22px; }
+/* Focus rings stay visible on dark and red surfaces. */
+.tile-dark :focus-visible, .split-art :focus-visible, .tile-profile :focus-visible, .primary:focus-visible, .msg.user :focus-visible { outline-color: var(--on-inverse); }
+.primary:focus-visible, .send:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; box-shadow: 0 0 0 2px var(--surface); }
+.nav-item:focus-visible, .pillnav button:focus-visible, .bo-nav button:focus-visible, .chip:focus-visible, .scn:focus-visible { outline-offset: 2px; }
+#main-content:focus { outline: none; }
+.skip { position: absolute; left: 12px; top: -60px; z-index: 100; padding: 10px 14px; border-radius: 10px; background: var(--inverse); color: var(--on-inverse); font: 600 14px/1 var(--font-ui); text-decoration: none; }
+.skip:focus { top: 12px; }
+.typing { display: inline-flex; gap: 4px; padding: 12px 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+.typing i { width: 7px; height: 7px; border-radius: 50%; background: var(--text-2); animation: blink 1.2s infinite ease-in-out; }
+.typing i:nth-child(2) { animation-delay: .15s; } .typing i:nth-child(3) { animation-delay: .3s; }
+@keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+.skeleton-lines { display: flex; flex-direction: column; gap: 8px; }
+.skeleton-lines .skeleton { height: 14px; border-radius: 6px; }
+.skeleton-lines .skeleton.short { width: 60%; }
+.crash { max-width: 520px; margin: 10vh auto; padding: 28px 22px; display: flex; flex-direction: column; gap: 10px; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow); }
+.crash h1, .crash h2 { margin: 0; font: 600 24px/1.2 var(--font-display); }
+.crash h2 { font-size: 20px; margin-top: 8px; }
+.crash p { margin: 0; color: var(--text-2); }
+.slot-row .chip, .sample .chip, .specimens .chip { min-height: 44px; }
+.skip { min-height: 44px; display: inline-flex; align-items: center; }
+.understood .facts-strip button { min-height: 44px; }

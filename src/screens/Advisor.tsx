@@ -255,7 +255,7 @@ export function Advisor({ lang, initialText, onQuote, onRestart }: { lang: Lang;
         ) : (
           <div key={m.id} className={`msg ${m.from} ${m.tone ?? ""}`}>{m.render(lang)}</div>
         ))}
-        {busy && <div className="typing">…</div>}
+        {busy && <div className="typing" role="status" aria-label={t(lang, "pl_typing")}><i /><i /><i /></div>}
       </div>
       <div className="dock" lang={lang}>
         <div className="dock-tools">
