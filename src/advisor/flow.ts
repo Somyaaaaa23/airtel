@@ -28,6 +28,8 @@ export interface Draft {
   machines?: number;
   pincode?: string;
   fibreFeasible?: boolean;
+  /** Optional questions the owner chose to skip; the rules engine then uses its defaults. */
+  skipped?: Step[];
 }
 
 export type Step =
@@ -47,6 +49,29 @@ export function needsLine(needs: Need[], segment: Segment): boolean {
     needs.some((n) => n !== "internet" && product(productForNeed(n, stub, "recommended")).requiresOneOf.length > 0);
 }
 
+/** Questions with a safe default: skipping them never changes what the catalogue allows. */
+export const SKIPPABLE: readonly Step[] = ["internet", "spend", "speed", "lines", "cameras", "vehicles", "machines", "pincode"];
+const isSkipped = (d: Draft, s: Step) => !!d.skipped?.includes(s);
+
+/** Marks an optional question as skipped. Required questions are returned unchanged. */
+export function skipStep(d: Draft, step: Step): Draft {
+  if (!SKIPPABLE.includes(step) || isSkipped(d, step)) return d;
+  return { ...d, skipped: [...(d.skipped ?? []), step] };
+}
+
+/** Facts shown on the "What I understood" card; each can be cleared so the advisor asks again. */
+export type UnderstoodField = "business" | "city" | "staff" | "gst" | "goals";
+
+export function clearField(d: Draft, field: UnderstoodField): Draft {
+  const n: Draft = { ...d, preNeeds: [...d.preNeeds] };
+  if (field === "business") { n.businessTypeId = undefined; n.chain = undefined; }
+  if (field === "city") { n.city = undefined; n.tier = undefined; }
+  if (field === "staff") n.employees = undefined;
+  if (field === "gst") { n.gst = undefined; n.gstin = undefined; n.legalName = undefined; }
+  if (field === "goals") { if (n.needs) n.preNeeds = [...n.needs]; n.needs = undefined; }
+  return n;
+}
+
 export function nextStep(d: Draft): Step {
   if (!d.businessTypeId) return "business";
   if (d.employees === undefined) return "employees";
@@ -54,15 +79,15 @@ export function nextStep(d: Draft): Step {
   if (d.tier === undefined) return "city";
   if (d.gst === undefined) return "gstin";
   if (d.gst === "awaiting") return "gstin_type";
-  if (d.currentInternet === undefined) return "internet";
-  if (d.monthlySpend === undefined) return "spend";
+  if (d.currentInternet === undefined && !isSkipped(d, "internet")) return "internet";
+  if (d.monthlySpend === undefined && !isSkipped(d, "spend")) return "spend";
   if (d.needs === undefined) return "needs";
-  if (d.needs.includes("internet") && d.speedPref === undefined && segmentOf(d) !== "micro") return "speed";
-  if (d.needs.includes("mobile_lines") && d.lines === undefined) return "lines";
-  if (d.needs.includes("cctv") && d.cameras === undefined) return "cameras";
-  if (d.needs.includes("fleet") && d.vehicles === undefined) return "vehicles";
-  if (d.needs.includes("machine_iot") && d.machines === undefined) return "machines";
-  if (needsLine(d.needs, segmentOf(d)) && d.fibreFeasible === undefined) return "pincode";
+  if (d.needs.includes("internet") && d.speedPref === undefined && segmentOf(d) !== "micro" && !isSkipped(d, "speed")) return "speed";
+  if (d.needs.includes("mobile_lines") && d.lines === undefined && !isSkipped(d, "lines")) return "lines";
+  if (d.needs.includes("cctv") && d.cameras === undefined && !isSkipped(d, "cameras")) return "cameras";
+  if (d.needs.includes("fleet") && d.vehicles === undefined && !isSkipped(d, "vehicles")) return "vehicles";
+  if (d.needs.includes("machine_iot") && d.machines === undefined && !isSkipped(d, "machines")) return "machines";
+  if (needsLine(d.needs, segmentOf(d)) && d.fibreFeasible === undefined && !isSkipped(d, "pincode")) return "pincode";
   return "done";
 }
 

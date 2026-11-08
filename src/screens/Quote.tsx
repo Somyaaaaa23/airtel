@@ -5,6 +5,7 @@ import { checkDependency, dependentsOf } from "../engine/eligibility";
 import { computeQuote } from "../engine/quote";
 import { defaultPlan } from "../engine/recommend";
 import { smartPrice, unitOffer } from "../engine/pricing";
+import { LeftOut } from "../components/leftout";
 import { Peers, SegmentHero, SegmentInsight, SmartPriceCard } from "../components/segment";
 import type { LineItem, Plan, Profile, Recommendation } from "../engine/types";
 import { inr, t, type Lang } from "../i18n/strings";
@@ -117,13 +118,7 @@ export function Quote({ lang, profile, rec, onKyc, onExpert }: {
           {rows.filter((r) => r.optional).map(renderRow)}
         </section>
 
-        {rec.blocked.length > 0 && (
-          <div className="notice blocked">
-            <strong>{t(lang, "notIncluded")}</strong>
-            <ul>{rec.blocked.map((b) => <li key={b.productId}>{pName(b.productId)}: {b.blocks.map((x) => blockText(x, lang)).join("; ")}{b.alternative ? `. ${t(lang, "insteadAdded", { product: pName(b.alternative) })}` : ""}</li>)}</ul>
-            {rec.blocked.some((b) => b.blocks.some((x) => x.code === "gstin")) && <span>{t(lang, "gstTip")}</span>}
-          </div>
-        )}
+        <LeftOut rec={rec} lang={lang} />
 
         <div className="facts">
           <div className="fact"><span>{t(lang, "setup")}</span><b className="num">{sp.setupFull ? <>{sp.setupPayable < sp.setupFull && <s>{inr(sp.setupFull)}</s>} {inr(sp.setupPayable)}</> : t(lang, "noSetup")}</b></div>

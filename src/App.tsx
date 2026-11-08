@@ -202,7 +202,6 @@ export default function App() {
         onBack={screen !== "dashboard" && back ? () => go(back) : undefined}
         onOpenDemos={() => setDemos(true)} onPrivacy={openPrivacy} onSignOut={signOut} flowing={flowing} demoMode={demoMode}
         actions={<>
-          {screen === "advisor" && <button className="textbtn" onClick={restart}>{t(lang, "startOver")}</button>}
           {screen !== "privacy" && (
             <button className="btn-ghost expert-btn" onClick={() => talkToExpert()} aria-label={t(lang, "ex_talk")}><Icon name="support" size={18} /><span className="hide-sm">{t(lang, "ex_talk")}</span></button>
           )}
@@ -217,7 +216,7 @@ export default function App() {
           <div className="flow">
             {JOURNEY_STEP[screen] !== undefined && <JourneyBar step={JOURNEY_STEP[screen]!} lang={lang} />}
             {screen === "advisor" && (
-              <Advisor key={run.key} lang={lang} initialText={run.text}
+              <Advisor key={run.key} lang={lang} initialText={run.text} onRestart={restart}
                 onQuote={(profile, r) => { setRec({ profile, rec: r }); go("quote"); }} />
             )}
             {screen === "sim" && <SimQuick lang={lang} onQuote={(profile, r) => { setRec({ profile, rec: r }); go("quote"); }} />}
