@@ -12,7 +12,15 @@ rate struck through, your price, and the saving**, never below Accel's lowest pu
 The **command centre** reproduces the problem slide live from the data and adds a segment deep-dive with automatic
 "why we're lacking" findings, a leak map with revenue at stake, and a what-if simulator (`src/engine/diagnose.ts`).
 
-Look: coral page (#FB6A4A), deep-coral panels with white text, cream headline accents, white buttons; Playfair Display headlines, Times New Roman text, Arial controls.
+Look: warm ivory workspace, white cards, midnight-blue text (#172B3A), coral #FF654F for brand and selection, deep orange
+#F05A28 for primary actions, cyan #20C5D8 as the accent (active navigation, progress, small graphics). Playfair Display for
+brand headlines only, Inter for everything else. All tokens live at the top of `src/styles.css`.
+
+**Layout:** landing page with a role choice → owner sign-in (six OTP boxes, resend timer, demo banner when OTP is mocked) with
+a compact demo panel beside it → owner workspace with a sidebar (Overview, My services, Find my plan, Usage & analytics,
+Bills & payments, Orders & installation, Support) and a top bar. The plan journey (chat → quote → KYC → contract → payment →
+tracker) runs in a focused column inside the workspace. Demo scenarios open in a filterable library
+(`src/components/demos.tsx`) from the sign-in page or the top bar; they never sit in the way of the product.
 
 **Journey:** start page (Business owner or Accel team) → mobile + OTP → name → **My Accel dashboard** → AI advisor chat
 (English / Hindi) or "I just need a SIM" → quote with
@@ -214,7 +222,8 @@ src/engine/      catalogue, eligibility, recommender, quote, GSTIN checksum, KYC
 src/services/    free-text parser, mock GSTIN/Udyam/feasibility/OCR APIs, order store, lead scoring
 src/advisor/     conversation flow (which question next) and explanation text
 src/i18n/        all English and Hindi copy
-src/screens/     Start, owner sign-in (Welcome), My Accel dashboard, Advisor, SIM path, Quote, Consent, Smart KYC, Contract,
+src/components/  design-system pieces: OwnerShell (sidebar + top bar), OtpInput, demo library, Modal, icons, segment cards
+src/screens/     Start, owner sign-in (Welcome), owner workspace pages (Dashboard), Advisor, SIM path, Quote, Consent, Smart KYC, Contract,
                  Payment, Tracker, Privacy, staff sign-in, command centre
 src/data/        hackathon CSVs, OCR output, back-office summary + model, city tiers, business types, demo scripts
 public/kyc/      the 47 KYC specimen images (shown as thumbnails)

@@ -11,9 +11,9 @@ const ROUTE: Record<string, string> = { self: "Fully online", assisted: "Online 
 const FRAME: Record<string, string> = { day: "₹ per day", staff: "₹ per staff member", site: "₹ per site", downtime: "Downtime cost" };
 const LOSS = [
   { k: "process", label: "Our own process", tone: "var(--bad)" },
-  { k: "reach", label: "Unreachable or not interested", tone: "var(--muted)" },
-  { k: "choice", label: "Chose not to buy", tone: "var(--apricot)" },
-  { k: "network", label: "No network at site", tone: "var(--ok)" },
+  { k: "reach", label: "Unreachable or not interested", tone: "#a9b6c0" },
+  { k: "choice", label: "Chose not to buy", tone: "var(--warn)" },
+  { k: "network", label: "No network at site", tone: "var(--cyan)" },
 ] as const;
 const inr = (n: number) => "₹" + Math.round(n).toLocaleString("en-IN");
 const lakh = (n: number) => (n >= 1e7 ? `₹${(n / 1e7).toFixed(2)} cr` : n >= 1e5 ? `₹${(n / 1e5).toFixed(1)} lakh` : inr(n));
@@ -228,7 +228,7 @@ export function LeakFinder() {
     <div className="bo-grid">
       <section className="panel wide">
         <h2>Leak map</h2>
-        <p className="fine">Conversion at each step. Dark = below the all-segment rate, green = above. Hover a cell for the numbers.</p>
+        <p className="fine">Conversion at each step. Red = below the all-segment rate, green = above; deeper colour = bigger gap. Hover a cell for the numbers.</p>
         <div className="heat" style={{ gridTemplateColumns: `140px repeat(${TRANSITIONS.length}, 1fr)` }}>
           <span />
           {TRANSITIONS.map((t) => <span key={t} className="hh">{t.replace(" → ", " →\n")}</span>)}
@@ -239,8 +239,8 @@ export function LeakFinder() {
                 const gap = v - bo.overall.stageConv[i];
                 const a = Math.min(0.85, Math.abs(gap) / 16 + 0.08);
                 return (
-                  <span key={i} className="hc" title={`${NAME[s.key]}, ${TRANSITIONS[i]}: ${pct(v)} (${gap > 0 ? "+" : ""}${Math.round(gap)} pts vs all)`}
-                    style={{ background: gap < 0 ? `rgb(60 0 0 / ${a})` : `rgb(0 110 70 / ${a})` }}>
+                  <span key={i} className={`hc ${a > 0.45 ? "dark" : ""}`} title={`${NAME[s.key]}, ${TRANSITIONS[i]}: ${pct(v)} (${gap > 0 ? "+" : ""}${Math.round(gap)} pts vs all)`}
+                    style={{ background: gap < 0 ? `rgb(217 72 72 / ${a})` : `rgb(33 134 106 / ${a})` }}>
                     <b className="num">{pct(v)}</b><small className="num">{gap > 0 ? "+" : ""}{Math.round(gap)}</small>
                   </span>
                 );

@@ -10,6 +10,7 @@ import { addDays } from "../engine/kyc";
 import { goLiveDay, planTasks, type Order } from "../engine/orders";
 import { fmtDate, inr } from "../i18n/strings";
 import { loadOrders } from "../services/orders";
+import { Brand } from "../components/ui";
 import { CallNext, ConsentPanel, HeatTag, KycReview } from "./BackOfficeQueues";
 import { LeakFinder, Overview, Segments, Simulator } from "./CommandCentre";
 
@@ -73,7 +74,7 @@ export function BackOffice({ admin, onSignOut }: { admin: string; onSignOut: () 
   return (
     <div className="bo bo-layout">
       <aside className="bo-side">
-        <div className="mark"><i aria-hidden="true">U</i><span>Udyam Digital<small>Command centre</small></span></div>
+        <Brand sub="Accel · Command centre" />
         <nav className="bo-nav" aria-label="Command centre">
           {TABS.map((x) => (
             <button key={x.id} aria-current={tab === x.id ? "page" : undefined} onClick={() => { setTab(x.id); window.scrollTo(0, 0); }}>

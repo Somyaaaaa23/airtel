@@ -1,5 +1,6 @@
 /** Staff sign-in page for the command centre. */
 import { useState } from "react";
+import { Brand, IconBack } from "../components/ui";
 import { ADMIN_EMAIL, checkAdmin } from "../services/admin";
 
 export function AdminLogin({ onBack, onSignedIn }: { onBack: () => void; onSignedIn: (email: string) => void }) {
@@ -17,18 +18,19 @@ export function AdminLogin({ onBack, onSignedIn }: { onBack: () => void; onSigne
   };
 
   return (
-    <main className="start admin-login">
-      <header className="start-top">
-        <div className="mark"><i aria-hidden="true">U</i><span>Udyam Digital<small>Accel Business · staff</small></span></div>
-        <button className="textbtn" onClick={onBack}>← Back</button>
+    <div className="site">
+      <header className="topnav">
+        <button className="iconbtn" onClick={onBack} aria-label="Back"><IconBack /></button>
+        <Brand sub="Accel Business · staff" />
       </header>
+      <main className="auth-layout single">
       <form className="login-card" onSubmit={submit} noValidate>
         <span className="eyebrow">Accel team</span>
-        <h1>Command centre <em>sign-in</em></h1>
+        <h1>Command centre sign-in</h1>
         <p className="fine">Segments, leak finder, simulator, operations and lead scoring.</p>
         <div className="field">
           <label htmlFor="adm-email">Work email</label>
-          <input id="adm-email" className="input" type="email" autoComplete="username" value={email}
+          <input id="adm-email" className="input" type="email" autoComplete="username" autoFocus value={email} aria-invalid={!!err}
             onChange={(e) => setEmail(e.target.value)} placeholder="name@udyamdigital.in" />
         </div>
         <div className="field">
@@ -43,6 +45,7 @@ export function AdminLogin({ onBack, onSignedIn }: { onBack: () => void; onSigne
         <button className="primary" type="submit">Sign in</button>
         <p className="fine">Prototype sign-in. In production this would be Accel's single sign-on.</p>
       </form>
-    </main>
+      </main>
+    </div>
   );
 }
