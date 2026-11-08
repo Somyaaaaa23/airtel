@@ -11,6 +11,283 @@
   "churn6m": 15.2,
   "avgNps": 6.9
  },
+ "months": [
+  "2026-04",
+  "2026-05",
+  "2026-06"
+ ],
+ "ranges": {
+  "2026-04..2026-04": {
+   "kpis": {
+    "leads": 1545,
+    "activated": 110,
+    "activationRate": 7.1,
+    "avgDaysToActivation": 17.6,
+    "avgFollowUps": 3,
+    "costPerActivation": 14161,
+    "avgMonthlyValue": 11267,
+    "churn6m": 15.5,
+    "avgNps": 6.7
+   },
+   "funnel": [
+    {
+     "stage": "Lead",
+     "count": 1545
+    },
+    {
+     "stage": "Contacted",
+     "count": 1051
+    },
+    {
+     "stage": "Needs assessed",
+     "count": 610
+    },
+    {
+     "stage": "Quote accepted",
+     "count": 255
+    },
+    {
+     "stage": "KYC complete",
+     "count": 177
+    },
+    {
+     "stage": "Activated",
+     "count": 110
+    }
+   ],
+   "loss": {
+    "process": 605,
+    "reach": 494,
+    "choice": 322,
+    "network": 14
+   }
+  },
+  "2026-04..2026-05": {
+   "kpis": {
+    "leads": 3296,
+    "activated": 241,
+    "activationRate": 7.3,
+    "avgDaysToActivation": 17.6,
+    "avgFollowUps": 3,
+    "costPerActivation": 14745,
+    "avgMonthlyValue": 12401,
+    "churn6m": 14.5,
+    "avgNps": 6.7
+   },
+   "funnel": [
+    {
+     "stage": "Lead",
+     "count": 3296
+    },
+    {
+     "stage": "Contacted",
+     "count": 2245
+    },
+    {
+     "stage": "Needs assessed",
+     "count": 1291
+    },
+    {
+     "stage": "Quote accepted",
+     "count": 566
+    },
+    {
+     "stage": "KYC complete",
+     "count": 392
+    },
+    {
+     "stage": "Activated",
+     "count": 241
+    }
+   ],
+   "loss": {
+    "process": 1282,
+    "reach": 1051,
+    "choice": 695,
+    "network": 27
+   }
+  },
+  "2026-04..2026-06": {
+   "kpis": {
+    "leads": 5000,
+    "activated": 368,
+    "activationRate": 7.4,
+    "avgDaysToActivation": 17.6,
+    "avgFollowUps": 3,
+    "costPerActivation": 15053,
+    "avgMonthlyValue": 12351,
+    "churn6m": 15.2,
+    "avgNps": 6.9
+   },
+   "funnel": [
+    {
+     "stage": "Lead",
+     "count": 5000
+    },
+    {
+     "stage": "Contacted",
+     "count": 3406
+    },
+    {
+     "stage": "Needs assessed",
+     "count": 1974
+    },
+    {
+     "stage": "Quote accepted",
+     "count": 861
+    },
+    {
+     "stage": "KYC complete",
+     "count": 588
+    },
+    {
+     "stage": "Activated",
+     "count": 368
+    }
+   ],
+   "loss": {
+    "process": 1944,
+    "reach": 1594,
+    "choice": 1053,
+    "network": 41
+   }
+  },
+  "2026-05..2026-05": {
+   "kpis": {
+    "leads": 1751,
+    "activated": 131,
+    "activationRate": 7.5,
+    "avgDaysToActivation": 17.6,
+    "avgFollowUps": 3,
+    "costPerActivation": 15236,
+    "avgMonthlyValue": 13353,
+    "churn6m": 13.7,
+    "avgNps": 6.7
+   },
+   "funnel": [
+    {
+     "stage": "Lead",
+     "count": 1751
+    },
+    {
+     "stage": "Contacted",
+     "count": 1194
+    },
+    {
+     "stage": "Needs assessed",
+     "count": 681
+    },
+    {
+     "stage": "Quote accepted",
+     "count": 311
+    },
+    {
+     "stage": "KYC complete",
+     "count": 215
+    },
+    {
+     "stage": "Activated",
+     "count": 131
+    }
+   ],
+   "loss": {
+    "process": 677,
+    "reach": 557,
+    "choice": 373,
+    "network": 13
+   }
+  },
+  "2026-05..2026-06": {
+   "kpis": {
+    "leads": 3455,
+    "activated": 258,
+    "activationRate": 7.5,
+    "avgDaysToActivation": 17.6,
+    "avgFollowUps": 3,
+    "costPerActivation": 15434,
+    "avgMonthlyValue": 12812,
+    "churn6m": 15.1,
+    "avgNps": 6.9
+   },
+   "funnel": [
+    {
+     "stage": "Lead",
+     "count": 3455
+    },
+    {
+     "stage": "Contacted",
+     "count": 2355
+    },
+    {
+     "stage": "Needs assessed",
+     "count": 1364
+    },
+    {
+     "stage": "Quote accepted",
+     "count": 606
+    },
+    {
+     "stage": "KYC complete",
+     "count": 411
+    },
+    {
+     "stage": "Activated",
+     "count": 258
+    }
+   ],
+   "loss": {
+    "process": 1339,
+    "reach": 1100,
+    "choice": 731,
+    "network": 27
+   }
+  },
+  "2026-06..2026-06": {
+   "kpis": {
+    "leads": 1704,
+    "activated": 127,
+    "activationRate": 7.5,
+    "avgDaysToActivation": 17.6,
+    "avgFollowUps": 3.1,
+    "costPerActivation": 15638,
+    "avgMonthlyValue": 12255,
+    "churn6m": 16.5,
+    "avgNps": 7.1
+   },
+   "funnel": [
+    {
+     "stage": "Lead",
+     "count": 1704
+    },
+    {
+     "stage": "Contacted",
+     "count": 1161
+    },
+    {
+     "stage": "Needs assessed",
+     "count": 683
+    },
+    {
+     "stage": "Quote accepted",
+     "count": 295
+    },
+    {
+     "stage": "KYC complete",
+     "count": 196
+    },
+    {
+     "stage": "Activated",
+     "count": 127
+    }
+   ],
+   "loss": {
+    "process": 662,
+    "reach": 543,
+    "choice": 358,
+    "network": 14
+   }
+  }
+ },
  "funnel": [
   {
    "stage": "Lead",

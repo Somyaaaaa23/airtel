@@ -982,6 +982,25 @@ button { cursor: pointer; }
 .lever b { text-align: right; color: var(--primary-text); }
 .sim-grid { display: grid; grid-template-columns: minmax(300px, 1fr) minmax(0, 1.5fr); gap: 16px; }
 
+.panel-head { display: flex; align-items: center; gap: 8px; }
+.panel-head h2 { flex: 0 1 auto; }
+.infotip { position: relative; display: inline-flex; vertical-align: middle; }
+.infotip > button { width: 22px; height: 22px; padding: 0; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--surface); color: var(--info); font: 700 11px/1 Georgia, serif; display: grid; place-items: center; cursor: help; position: relative; }
+.infotip > button::before { content: ""; position: absolute; inset: -11px; }
+.infotip > [role="tooltip"] { position: absolute; z-index: 30; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%); width: max-content; max-width: min(280px, 80vw); padding: 10px 12px; border-radius: 10px; background: var(--inverse); color: var(--on-inverse); font: 400 12.5px/1.45 var(--font-ui); text-transform: none; letter-spacing: 0; box-shadow: var(--shadow-lg); visibility: hidden; opacity: 0; transition: opacity .12s; pointer-events: none; text-align: left; white-space: normal; }
+.infotip:hover > [role="tooltip"], .infotip:focus-within > [role="tooltip"], .infotip.open > [role="tooltip"] { visibility: visible; opacity: 1; }
+.bo-tools { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.daterange { border: 0; margin: 0; padding: 0; display: flex; gap: 8px; }
+.daterange label { display: flex; flex-direction: column; gap: 4px; font: 600 12px/1 var(--font-ui); color: var(--text-2); }
+.daterange select { height: 44px; min-width: 120px; }
+.fix3 { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.fix3 li { display: grid; grid-template-columns: 30px 1fr; gap: 6px 10px; padding: 14px; border-radius: 14px; background: var(--surface); border: 1px solid var(--line); }
+.fix3 li > div { display: flex; flex-direction: column; gap: 4px; }
+.fix3 .rank { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--primary); color: var(--on-primary); font: 700 13px/1 var(--font-ui); }
+.fix3 .money { grid-column: 2; font: 700 22px/1.1 var(--font-num); }
+.fix3 .money small { font-size: 12px; color: var(--text-2); font-weight: 400; }
+.panel.fixfirst { border-color: var(--primary-line); }
+
 /* ---------- Responsive ---------- */
 @media (max-width: 1240px) { .sim-grid { grid-template-columns: 1fr; } .pillnav button { padding: 0 12px; } .ws-top .top-lang { display: none; } }
 @media (max-width: 1100px) {

@@ -12,7 +12,11 @@ import { fmtDate, inr } from "../i18n/strings";
 import { loadOrders } from "../services/orders";
 import { Brand } from "../components/ui";
 import { CallNext, ConsentPanel, HeatTag, KycReview } from "./BackOfficeQueues";
-import { LeakFinder, Overview, Segments, Simulator } from "./CommandCentre";
+import { Def, LeakFinder, Overview, Segments, Simulator, type RangeData } from "./CommandCentre";
+import { toCsv } from "../engine/csv";
+import { topLeaks } from "../engine/diagnose";
+import type { LossKind } from "../engine/lossCategories";
+import type { MetricId } from "../engine/metricDefs";
 
 type Tab = "overview" | "segments" | "leaks" | "simulator" | "ops" | "model";
 const TABS: { id: Tab; label: string; sub: string; icon: string }[] = [
@@ -65,11 +69,26 @@ export function BackOffice({ admin, onSignOut }: { admin: string; onSignOut: () 
   const [showAllDrops, setShowAllDrops] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
   const openLeads = orders.filter((o) => o.kycStatus === "review").length;
-  const k = bo.kpis;
   const fixable = bo.drops.filter((d) => d.fixedBy).reduce((s, d) => s + d.count, 0);
   const totalDrops = bo.drops.reduce((s, d) => s + d.count, 0);
   const drops = showAllDrops ? bo.drops : bo.drops.slice(0, 8);
   const current = TABS.find((x) => x.id === tab)!;
+  const [from, setFrom] = useState(bo.months[0]);
+  const [to, setTo] = useState(bo.months[bo.months.length - 1]);
+  const range: RangeData = (() => {
+    const r = bo.ranges[`${from}..${to}` as keyof typeof bo.ranges];
+    return { label: from === to ? monthLabel(from) : `${monthLabel(from)}–${monthLabel(to)}`, kpis: r.kpis, funnel: r.funnel, loss: r.loss as Record<LossKind, number> };
+  })();
+  const rk = range.kpis;
+  const exportCsv = () => {
+    const rows = csvRows(tab, range, orders);
+    const blob = new Blob([toCsv(rows)], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `udyam-command-centre-${tab}-${from}_${to}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
 
   return (
     <div className="bo bo-layout">
@@ -98,22 +117,36 @@ export function BackOffice({ admin, onSignOut }: { admin: string; onSignOut: () 
           <h1>{current.label}</h1>
           <p className="fine">{current.sub}</p>
         </div>
+        <div className="bo-tools">
+          {tab === "overview" && (
+            <fieldset className="daterange">
+              <legend className="vh">Date range</legend>
+              <label>From <select className="input small" value={from} onChange={(e) => { setFrom(e.target.value); if (e.target.value > to) setTo(e.target.value); }}>
+                {bo.months.map((m) => <option key={m} value={m}>{monthLabel(m)}</option>)}
+              </select></label>
+              <label>To <select className="input small" value={to} onChange={(e) => setTo(e.target.value)}>
+                {bo.months.filter((m) => m >= from).map((m) => <option key={m} value={m}>{monthLabel(m)}</option>)}
+              </select></label>
+            </fieldset>
+          )}
+          <button className="secondary auto" onClick={exportCsv}>Export CSV</button>
+        </div>
       </header>
 
-      {tab === "overview" && <section className="kpis" aria-label="Last quarter">
-        {[
-          ["Leads", k.leads.toLocaleString("en-IN"), "Apr–Jun 2026"],
-          ["Activated", pct(k.activationRate), `${k.activated} businesses`],
-          ["Lead → live", `${k.avgDaysToActivation} days`, "average, activated leads"],
-          ["Chasing calls", String(k.avgFollowUps), "per activated customer"],
-          ["Cost per activation", inr(k.costPerActivation), "sales + partner cost"],
-          ["Monthly value", inr(k.avgMonthlyValue), `NPS ${k.avgNps} · churn ${pct(k.churn6m)}`],
-        ].map(([l, v, sub]) => (
-          <div key={l} className="kpi"><span>{l}</span><b className="num">{v}</b><small>{sub}</small></div>
+      {tab === "overview" && <section className="kpis" aria-label={range.label}>
+        {([
+          ["Leads", rk.leads.toLocaleString("en-IN"), range.label, "leads"],
+          ["Activated", pct(rk.activationRate), `${rk.activated} businesses`, "activated"],
+          ["Lead → live", `${rk.avgDaysToActivation} days`, "average, activated leads", "leadToLive"],
+          ["Chasing calls", String(rk.avgFollowUps), "per activated customer", "chasingCalls"],
+          ["Cost per activation", inr(rk.costPerActivation), "sales + partner cost", "costPerActivation"],
+          ["Monthly value", inr(rk.avgMonthlyValue), `NPS ${rk.avgNps} · churn ${pct(rk.churn6m)}`, "monthlyValue"],
+        ] as [string, string, string, MetricId][]).map(([l, v, sub, d]) => (
+          <div key={l} className="kpi"><span>{l} <Def id={d} label={l} /></span><b className="num">{v}</b><small>{sub}</small></div>
         ))}
       </section>}
 
-      {tab === "overview" && <Overview />}
+      {tab === "overview" && <Overview range={range} />}
       {tab === "segments" && <Segments />}
       {tab === "leaks" && <LeakFinder />}
       {tab === "simulator" && <Simulator />}
@@ -163,8 +196,8 @@ export function BackOffice({ admin, onSignOut }: { admin: string; onSignOut: () 
             Trained on {bo.metrics.trainSize.toLocaleString("en-IN")} leads, tested on {bo.metrics.testSize.toLocaleString("en-IN")} held out.
           </p>
           <div className="facts">
-            <div className="fact"><span>AUC on held-out leads</span><b className="num">{bo.metrics.auc}</b></div>
-            <div className="fact"><span>Activations in the top 30% of scores</span><b className="num">{pct(bo.metrics.top30Capture)}</b></div>
+            <div className="fact"><span>AUC on held-out leads <Def id="auc" label="AUC" /></span><b className="num">{bo.metrics.auc}</b></div>
+            <div className="fact"><span>Activations in the top 30% of scores <Def id="top30" label="Top 30% capture" /></span><b className="num">{pct(bo.metrics.top30Capture)}</b></div>
           </div>
           <h3>Activation rate by score decile</h3>
           <p className="fine">Held-out leads, highest scores first. Average: {pct(bo.metrics.baseRate)}.</p>
@@ -246,4 +279,27 @@ export function BackOffice({ admin, onSignOut }: { admin: string; onSignOut: () 
       </div>
     </div>
   );
+}
+
+const monthLabel = (m: string) => new Date(`${m}-01T00:00:00`).toLocaleString("en-IN", { month: "short", year: "numeric" });
+
+/** What "Export CSV" downloads on each tab. */
+function csvRows(tab: string, range: RangeData, orders: Order[]): Record<string, string | number>[] {
+  if (tab === "overview") return [
+    ...Object.entries(range.kpis).map(([metric, value]) => ({ section: `KPIs ${range.label}`, metric, value })),
+    ...range.funnel.map((f) => ({ section: `Funnel ${range.label}`, metric: f.stage, value: f.count })),
+    ...Object.entries(range.loss).map(([metric, value]) => ({ section: `Lost leads ${range.label}`, metric, value })),
+  ];
+  if (tab === "segments") return bo.segments.map((s) => ({
+    segment: s.name, leads: s.leads, share_pct: s.share, activation_pct: s.activationRate, median_bill_inr: s.medianBundle,
+    cost_per_activation_inr: s.costPerActivation, payback_months: s.paybackMonths, days_to_live: s.daysToLive, churn_pct: s.churn, nps: s.nps,
+    lost_own_process: s.loss.process, lost_unreachable: s.loss.reach, lost_chose_not_to_buy: s.loss.choice, lost_no_network: s.loss.network,
+  }));
+  if (tab === "leaks" || tab === "simulator") return topLeaks(100).map((l, i) => ({
+    rank: i + 1, segment: l.seg.name, reason: l.reason, leads: l.count, stage: l.stage, activation_chance: l.p, at_stake_inr_per_month: l.atStake, fix: l.fix,
+  }));
+  if (tab === "ops") return orders.map((o) => ({
+    order: o.id, business: o.businessName, city: o.city ?? "", monthly_inr: o.monthly, kyc: o.kycStatus, score: o.score ?? "", placed: o.placedOn,
+  }));
+  return bo.drops.map((d) => ({ reason: d.reason, leads: d.count, stage: d.stage, answered_by: d.fixedBy ?? "" }));
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import type { Lang } from "../i18n/strings";
 
 const svg = (d: ReactNode, size = 22) => (
@@ -55,7 +55,7 @@ export function LangToggle({ lang, setLang }: { lang: Lang; setLang: (l: Lang) =
 
 /** Accel mark and product name. */
 export function Brand({ sub = "Accel Business", onClick }: { sub?: string; onClick?: () => void }) {
-  const inner = <><i aria-hidden="true">A</i><span><b>Udyam Digital</b><small>{sub}</small></span></>;
+  const inner = <span><b>Udyam Digital</b><small>{sub}</small></span>;
   return onClick ? <button className="brand" onClick={onClick} aria-label="Udyam Digital home">{inner}</button> : <div className="brand">{inner}</div>;
 }
 
@@ -89,5 +89,18 @@ export function Bar({ title, onBack, backLabel, right }: { title: string; onBack
       <h1>{title}</h1>
       {right}
     </header>
+  );
+}
+
+/** "i" button with a definition. Opens on hover, keyboard focus or tap; Escape closes it. */
+export function InfoTip({ text, label }: { text: string; label: string }) {
+  const id = useId();
+  const [open, setOpen] = useState(false);
+  return (
+    <span className={`infotip ${open ? "open" : ""}`}>
+      <button type="button" aria-label={`${label}: definition`} aria-describedby={id} aria-expanded={open}
+        onClick={() => setOpen((v) => !v)} onBlur={() => setOpen(false)} onKeyDown={(e) => { if (e.key === "Escape") setOpen(false); }}>i</button>
+      <span role="tooltip" id={id}>{text}</span>
+    </span>
   );
 }

@@ -6,9 +6,9 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { parseCsv } from "../src/engine/csv";
 import { auc, featureLabel, fit, leadFromCsv, score } from "../src/engine/propensity";
+import { lossOf } from "../src/engine/lossCategories";
 
 const rows = parseCsv(readFileSync(new URL("../src/data/smb_leads.csv", import.meta.url), "utf8"));
-const activated = rows.filter((r) => r.outcome === "Activated");
 const avg = (xs: number[]) => xs.reduce((s, v) => s + v, 0) / xs.length;
 const round = (v: number, d = 1) => Math.round(v * 10 ** d) / 10 ** d;
 
@@ -85,14 +85,6 @@ const winBackPool = rows.filter((r) => r.outcome === "Dropped" && RECOVERABLE.ha
 const SEG_KEY: Record<string, string> = {
   "Micro retail & services": "micro", "Professional offices": "prof", "Small multi-site businesses": "multi", "Small manufacturers": "mfg",
 };
-// Loss categories from the problem slide: our own process, unreachable / not interested, chose not to buy, no network.
-const OWN_PROCESS = new Set([
-  "Visit not scheduled by sales", "Owner had no time for a visit", "Only wanted a mobile plan", "Quote too complex to understand",
-  "Quote took too long to arrive", "Missing GST or Udyam document", "Found paperwork too long", "Authorised signatory not available",
-  "Document details did not match", "Installation delayed beyond 21 days", "Customer cancelled before install", "First payment failed",
-]);
-const UNREACHABLE = new Set(["Unreachable after 3 attempts", "Not interested on first call", "Wrong or invalid number"]);
-const lossOf = (reason: string) => (OWN_PROCESS.has(reason) ? "process" : UNREACHABLE.has(reason) ? "reach" : reason === "Site not feasible for fibre" ? "network" : "choice");
 const median = (xs: number[]) => {
   const s = [...xs].sort((a, b) => a - b);
   const m = Math.floor(s.length / 2);
@@ -166,19 +158,35 @@ function segmentStats(rs: Record<string, string>[]) {
 const overall = segmentStats(rows);
 const segments = Object.entries(SEG_KEY).map(([name, key]) => ({ key, name, ...segmentStats(rows.filter((r) => r.segment === name)) }));
 
+function kpisOf(rs: Record<string, string>[]) {
+  const act = rs.filter((r) => r.outcome === "Activated");
+  return {
+    leads: rs.length,
+    activated: act.length,
+    activationRate: round((act.length / rs.length) * 100),
+    avgDaysToActivation: round(avg(act.map((r) => Number(r.days_lead_to_activation)))),
+    avgFollowUps: round(avg(act.map((r) => Number(r.customer_follow_up_calls)))),
+    costPerActivation: Math.round(rs.reduce((s, r) => s + Number(r.acquisition_cost_inr || 0), 0) / act.length),
+    avgMonthlyValue: Math.round(avg(act.map((r) => Number(r.monthly_bundle_value_inr)))),
+    churn6m: round((act.filter((r) => r.churned_within_6_months === "Y").length / act.length) * 100),
+    avgNps: round(avg(act.map((r) => Number(r.nps_score)))),
+  };
+}
+// Date-range views: every contiguous span of lead-creation months, keyed "YYYY-MM..YYYY-MM".
+const months = [...new Set(rows.map((r) => r.created_date.slice(0, 7)))].sort();
+const ranges: Record<string, { kpis: ReturnType<typeof kpisOf>; funnel: { stage: string; count: number }[]; loss: Record<string, number> }> = {};
+for (let i = 0; i < months.length; i++) for (let j = i; j < months.length; j++) {
+  const rs = rows.filter((r) => { const m = r.created_date.slice(0, 7); return m >= months[i] && m <= months[j]; });
+  const loss = { process: 0, reach: 0, choice: 0, network: 0 } as Record<string, number>;
+  for (const r of rs) if (r.drop_reason) loss[lossOf(r.drop_reason)]++;
+  ranges[`${months[i]}..${months[j]}`] = { kpis: kpisOf(rs), funnel: STAGES.map((stage) => ({ stage, count: rs.filter((r) => reached(r, stage)).length })), loss };
+}
+
 const out = {
   source: "smb_leads.csv: 5,000 leads, Apr–Jun 2026 (synthetic hackathon data)",
-  kpis: {
-    leads: rows.length,
-    activated: activated.length,
-    activationRate: round((activated.length / rows.length) * 100),
-    avgDaysToActivation: round(avg(activated.map((r) => Number(r.days_lead_to_activation)))),
-    avgFollowUps: round(avg(activated.map((r) => Number(r.customer_follow_up_calls)))),
-    costPerActivation: Math.round(rows.reduce((s, r) => s + Number(r.acquisition_cost_inr || 0), 0) / activated.length),
-    avgMonthlyValue: Math.round(avg(activated.map((r) => Number(r.monthly_bundle_value_inr)))),
-    churn6m: round((activated.filter((r) => r.churned_within_6_months === "Y").length / activated.length) * 100),
-    avgNps: round(avg(activated.map((r) => Number(r.nps_score)))),
-  },
+  kpis: kpisOf(rows),
+  months,
+  ranges,
   funnel,
   drops,
   channels,
