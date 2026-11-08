@@ -687,6 +687,19 @@ const en = {
   dm_none: "No scenarios match your search.",
   dm_results_t: "Run all: results",
   dm_err: "Couldn't run the scenarios. Try again.",
+  kf_title: "Pass or fail",
+  kf_fix: "Fix it",
+  kf_all_pass: "Every check passed.",
+  kf_summary: "{pass} passed · {fail} to fix · {warn} to review",
+  cam_title: "Take a clear photo",
+  cam_tip_frame: "Fit the whole document inside the frame.",
+  cam_tip_steady: "Hold the phone steady and tap to focus: blurred photos can't be read.",
+  cam_tip_light: "Use daylight and avoid glare on laminated cards.",
+  cam_blur: "Your last photo was too blurred to read. Try again with these tips.",
+  cam_take: "Take photo",
+  cam_choose: "Choose a file",
+  kd_resume: "Resume later",
+  kd_resumed: "Welcome back: we kept your documents and answers.",
 };
 
 export type Key = keyof typeof en;
@@ -1357,6 +1370,19 @@ const hi: Record<Key, string> = {
   dm_none: "आपकी खोज से कोई उदाहरण नहीं मिला।",
   dm_results_t: "सभी चलाएँ: नतीजे",
   dm_err: "उदाहरण नहीं चल पाए। फिर कोशिश करें।",
+  kf_title: "पास या फ़ेल",
+  kf_fix: "ठीक करें",
+  kf_all_pass: "हर जाँच पास।",
+  kf_summary: "{pass} पास · {fail} ठीक करने हैं · {warn} जाँच के लिए",
+  cam_title: "साफ़ फ़ोटो लें",
+  cam_tip_frame: "पूरा दस्तावेज़ फ़्रेम के अंदर रखें।",
+  cam_tip_steady: "फ़ोन स्थिर रखें और फ़ोकस के लिए टैप करें: धुँधली फ़ोटो पढ़ी नहीं जा सकती।",
+  cam_tip_light: "दिन की रोशनी लें, लैमिनेटेड कार्ड पर चमक से बचें।",
+  cam_blur: "पिछली फ़ोटो पढ़ने के लिए बहुत धुँधली थी। इन सुझावों के साथ फिर कोशिश करें।",
+  cam_take: "फ़ोटो लें",
+  cam_choose: "फ़ाइल चुनें",
+  kd_resume: "बाद में जारी रखें",
+  kd_resumed: "वापसी पर स्वागत: आपके दस्तावेज़ और जवाब सुरक्षित हैं।",
 };
 
 export const STRINGS: Record<Lang, Record<Key, string>> = { en, hi };

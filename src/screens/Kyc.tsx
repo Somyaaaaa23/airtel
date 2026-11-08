@@ -8,6 +8,9 @@ import { KYC_DEMOS } from "../data/demos";
 import { readDocument, readSpecimenSync, SPECIMENS, specimenImage } from "../services/ocr";
 import { KYC_REGISTRY } from "../services/registry";
 import type { QuoteResult } from "./Quote";
+import { actionable, fixTarget, isBlurry } from "../engine/kycFix";
+import { clearKycDraft, loadKycDraft, saveKycDraft } from "../services/kycDraft";
+import { Modal } from "../components/ui";
 
 interface Slot { name: string; image?: string; status: "reading" | "done" | "error"; parsed?: ParsedDoc; edited?: string[] }
 
@@ -59,19 +62,42 @@ function checkText(c: Check, lang: Lang): string {
 
 export type KycSnapshot = NonNullable<Order["kyc"]>;
 
-export function Kyc({ lang, quote, applicant, onContinue, onExpert }: {
+export function Kyc({ lang, quote, applicant, onContinue, onExpert, draftKey, onResumeLater }: {
   lang: Lang; quote: QuoteResult; applicant?: string;
   onContinue: (r: KycResult, snap: KycSnapshot) => void; onExpert: (reason: string) => void;
+  /** Where "Resume later" keeps this application's progress. */
+  draftKey: string; onResumeLater: () => void;
 }) {
   const { profile } = quote;
   const needsGst = quote.items.some((i) => product(i.productId).requiresGstin);
-  const [specimen, setSpecimen] = useState<string | null>(null);
-  const [slots, setSlots] = useState<Partial<Record<DocKind, Slot>>>({});
+  const [saved] = useState(() => loadKycDraft(draftKey));
+  const [specimen, setSpecimen] = useState<string | null>(saved?.specimen ?? null);
+  const [slots, setSlots] = useState<Partial<Record<DocKind, Slot>>>(() => (saved?.slots ?? {}) as Partial<Record<DocKind, Slot>>);
+  const [camFor, setCamFor] = useState<DocKind | null>(null);
+  const [focusDoc, setFocusDoc] = useState<DocKind | null>(null);
   const [editing, setEditing] = useState<DocKind | null>(null);
   const [draft, setDraft] = useState<Record<string, string>>({});
-  const [pan, setPan] = useState("");
+  const [pan, setPan] = useState(saved?.pan ?? "");
   const [confirmed, setConfirmed] = useState(false);
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(saved?.step ?? 0);
+  useEffect(() => {
+    if (!focusDoc) return;
+    const el = document.getElementById(`doc-${focusDoc}`);
+    el?.scrollIntoView({ block: "center" });
+    el?.querySelector<HTMLElement>(".upload")?.focus();
+    setFocusDoc(null);
+  }, [focusDoc, step]);
+  const resumeLater = () => {
+    const done = Object.fromEntries(Object.entries(slots).filter(([, x]) => x && x.status !== "reading"));
+    saveKycDraft(draftKey, { step, specimen, pan, slots: done as never });
+    onResumeLater();
+  };
+  const fix = (c: Check) => {
+    const target = fixTarget(c);
+    setStep(target.step);
+    setFocusDoc(target.doc);
+    if (["missing", "unreadable", "wrong_kind"].includes(c.code)) setCamFor(target.doc);
+  };
   const urls = useRef<string[]>([]);
   useEffect(() => () => urls.current.forEach((u) => URL.revokeObjectURL(u)), []);
   const match = profile.gstin ? Object.entries(SPECIMEN_GSTIN).find(([, g]) => sameId(g, profile.gstin!))?.[0] : undefined;
@@ -150,17 +176,14 @@ export function Kyc({ lang, quote, applicant, onContinue, onExpert }: {
     const state = !s ? "empty" : s.status !== "done" ? s.status : docChecks.some((c) => c.status === "fail") ? "bad" : docChecks.length ? "warn" : "good";
     const fields = SHOW[kind].filter((f) => editing === kind || s?.parsed?.fields[f]);
     return (
-      <section key={kind} className={`doc ${state}`} aria-label={t(lang, `dk_${kind}` as Key)}>
+      <section key={kind} id={`doc-${kind}`} className={`doc ${state}`} aria-label={t(lang, `dk_${kind}` as Key)}>
         <div className="doc-head">
           {s?.image ? <img className="thumb" src={s.image} alt="" onError={(e) => (e.currentTarget.style.display = "none")} /> : <span className="thumb empty" aria-hidden="true">{kind === "id" ? "ID" : kind === "address" ? "₹" : kind === "gst" ? "GST" : "U"}</span>}
           <div className="doc-title">
             <b>{t(lang, `dk_${kind}` as Key)}</b>
             <span className="fine">{s?.status === "reading" ? t(lang, "reading") : s ? s.name : note(kind)}</span>
           </div>
-          <label className="upload">
-            {t(lang, s ? "replace" : "upload")}
-            <input type="file" accept="image/*" capture="environment" className="vh" onChange={(e) => { upload(kind, e.target.files?.[0]); e.target.value = ""; }} />
-          </label>
+          <button className="upload" onClick={() => setCamFor(kind)}>{t(lang, s ? "replace" : "upload")}</button>
         </div>
         {s?.status === "error" && <p className="doc-err">{t(lang, "cantRead")}</p>}
         {s?.parsed?.readable && (
@@ -214,6 +237,7 @@ export function Kyc({ lang, quote, applicant, onContinue, onExpert }: {
           ))}
         </ol>
 
+        {saved && <p className="demo-banner" role="status">{t(lang, "kd_resumed")}</p>}
         <details className="sample">
           <summary>{t(lang, "ks_sample")}{match ? ` · ${match} ${t(lang, "specMatch").toLowerCase()}` : ""}</summary>
           <div className="chips">
@@ -270,6 +294,21 @@ export function Kyc({ lang, quote, applicant, onContinue, onExpert }: {
             </section>
             {result ? (
               <>
+                <section className="passfail" aria-label={t(lang, "kf_title")}>
+                  <h3>{t(lang, "kf_title")}</h3>
+                  <p className="fine">{t(lang, "kf_summary", { pass: passed, fail: fails.length, warn: result.checks.filter((c) => c.status === "warn").length })}</p>
+                  {actionable(result.checks).length === 0 ? <p className="ok-line">{t(lang, "kf_all_pass")}</p> : (
+                    <ul>
+                      {actionable(result.checks).map((c, i) => (
+                        <li key={i} className={c.status}>
+                          <span className={`tag ${c.status === "warn" ? "opt" : "out"}`}>{c.status === "warn" ? "!" : "✕"}</span>
+                          <span>{checkText(c, lang)}</span>
+                          {c.status === "fail" && <button className="secondary auto" onClick={() => fix(c)}>{t(lang, "kf_fix")}</button>}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </section>
                 <div className="score">
                   <div className="ring" style={{ background: `conic-gradient(var(--ok) ${(passed / Math.max(1, total)) * 360}deg, var(--surface-2) 0)` }}><b className="num">{passed}/{total}</b></div>
                   <p>{t(lang, "ks_score", { n: passed, total })}</p>
@@ -292,6 +331,7 @@ export function Kyc({ lang, quote, applicant, onContinue, onExpert }: {
         )}
       </main>
       <footer className="footer" lang={lang}>
+        <button className="textbtn resume" onClick={resumeLater} disabled={reading}>{t(lang, "kd_resume")}</button>
         {step < 3 ? (
           <div className="row2 equal">
             <button className="secondary" disabled={step === 0} onClick={() => setStep((n) => n - 1)}>{t(lang, "ks_prev")}</button>
@@ -308,12 +348,34 @@ export function Kyc({ lang, quote, applicant, onContinue, onExpert }: {
                 <span>{t(lang, "confirmFields")}</span>
               </label>
             )}
-            <button className="primary" disabled={!canGo} onClick={() => result && onContinue(result, snapshot())}>
+            <button className="primary" disabled={!canGo} onClick={() => { if (!result) return; clearKycDraft(draftKey); onContinue(result, snapshot()); }}>
               {result?.status === "fix" ? t(lang, "fixFirst") : t(lang, "kycContinue")}
             </button>
           </>
         )}
       </footer>
+      {camFor && (
+        <Modal label={t(lang, "cam_title")} onClose={() => setCamFor(null)} className="modal-sm">
+          <div className="cam">
+            <div className="modal-head"><h2>{t(lang, "cam_title")} · {t(lang, `dk_${camFor}` as Key)}</h2></div>
+            {(slots[camFor]?.status === "error" || (result && isBlurry(result.checks, camFor))) && <p className="notice blocked" role="alert"><strong>{t(lang, "cam_blur")}</strong></p>}
+            <div className="cam-frame" aria-hidden="true"><i /><i /><i /><i /><span>{t(lang, `dk_${camFor}` as Key)}</span></div>
+            <ul className="cam-tips">
+              <li>{t(lang, "cam_tip_frame")}</li>
+              <li><b>{t(lang, "cam_tip_steady")}</b></li>
+              <li>{t(lang, "cam_tip_light")}</li>
+            </ul>
+            <div className="row2 equal">
+              <label className="secondary">{t(lang, "cam_choose")}
+                <input type="file" accept="image/*" className="vh" onChange={(e) => { upload(camFor, e.target.files?.[0]); e.target.value = ""; setCamFor(null); }} />
+              </label>
+              <label className="primary">{t(lang, "cam_take")}
+                <input type="file" accept="image/*" capture="environment" className="vh" onChange={(e) => { upload(camFor, e.target.files?.[0]); e.target.value = ""; setCamFor(null); }} />
+              </label>
+            </div>
+          </div>
+        </Modal>
+      )}
     </>
   );
 }

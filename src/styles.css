@@ -795,6 +795,26 @@ button { cursor: pointer; }
 .group.fix .gdot { background: var(--bad); }
 .group.review .gdot { background: var(--warn); color: #1f2328; }
 
+.passfail { border: 1px solid var(--line); border-radius: var(--r-card); padding: 14px 16px; background: var(--surface); display: flex; flex-direction: column; gap: 8px; }
+.passfail h3 { margin: 0; font: 600 15px/1.3 var(--font-ui); }
+.passfail p { margin: 0; }
+.passfail ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.passfail li { display: grid; grid-template-columns: 28px 1fr auto; gap: 8px; align-items: center; font-size: 14px; }
+.passfail li .secondary { min-height: 40px; padding: 0 14px; font-size: 13.5px; }
+.footer .resume { align-self: center; }
+.cam { display: flex; flex-direction: column; gap: 14px; padding: 0 20px 20px; }
+.cam .modal-head { padding: 16px 0 0; border: 0; }
+.cam-frame { position: relative; aspect-ratio: 1.58; border-radius: 16px; background: var(--inverse); display: grid; place-items: center; overflow: hidden; }
+.cam-frame span { color: var(--on-inverse-2); font: 600 13px/1 var(--font-ui); }
+.cam-frame i { position: absolute; width: 28px; height: 28px; border: 3px solid var(--on-inverse); }
+.cam-frame i:nth-child(1) { top: 14px; left: 14px; border-right: 0; border-bottom: 0; border-radius: 8px 0 0 0; }
+.cam-frame i:nth-child(2) { top: 14px; right: 14px; border-left: 0; border-bottom: 0; border-radius: 0 8px 0 0; }
+.cam-frame i:nth-child(3) { bottom: 14px; left: 14px; border-right: 0; border-top: 0; border-radius: 0 0 0 8px; }
+.cam-frame i:nth-child(4) { bottom: 14px; right: 14px; border-left: 0; border-top: 0; border-radius: 0 0 8px 0; }
+.cam-tips { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.cam label { cursor: pointer; }
+.cam label:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+
 /* ---------- Order tracker and end screens ---------- */
 .order-card { display: flex; flex-direction: column; gap: 6px; }
 .order-card h2 { margin: 0; font: 600 22px/1.2 var(--font-display); }

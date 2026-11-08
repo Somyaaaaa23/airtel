@@ -32,6 +32,8 @@ import { convertLead, saveLead, type LeadStage } from "./services/leads";
 import { scoreProfile } from "./services/leadScore";
 import { loadOrders, saveOrder } from "./services/orders";
 import { loadDemoMode, resetDemoData, saveDemoMode } from "./services/demo";
+import { draftKey } from "./services/kycDraft";
+import { quoteSignature } from "./services/priceHold";
 
 type Screen = "start" | "adminLogin" | "dashboard" | "welcome" | "advisor" | "sim" | "quote" | "consent" | "kyc" | "contract" | "payment" | "track" | "privacy" | "backoffice";
 
@@ -229,6 +231,7 @@ export default function App() {
             {screen === "consent" && <Consent lang={lang} phone={phone} onDone={() => go("kyc")} onPrivacy={openPrivacy} />}
             {screen === "kyc" && quote && (
               <Kyc key={JSON.stringify(quote.items)} lang={lang} quote={quote} applicant={applicant || undefined}
+                draftKey={draftKey(phone, quoteSignature(quote.items, quote.profile))} onResumeLater={() => { setView("overview"); go("dashboard"); }}
                 onContinue={(result, snap) => { setKyc({ result, snap }); setSigned(null); go("contract"); }}
                 onExpert={(reason) => talkToExpert(`Stuck at KYC: ${reason}`)} />
             )}
