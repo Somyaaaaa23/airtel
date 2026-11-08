@@ -663,6 +663,18 @@ const en = {
   r_skipped: "Skipped. I'll use the catalogue's default for this.",
   lo_title: "Left out and why",
   lo_none: "Nothing left out: everything you asked for fits your business.",
+  perDay: "/day",
+  qt_month: "Per month",
+  qt_day: "Per day",
+  qt_period: "Show prices",
+  qt_share: "Share on WhatsApp",
+  qt_hold: "Hold this price for 48 hours",
+  qt_held: "Price held · {time} left",
+  qt_held_until: "Held until {date}",
+  qt_hold_lapsed: "The 48-hour hold has ended. Hold again to keep this price.",
+  sh_head: "My Accel Business quote (Udyam Digital):",
+  sh_price: "Price: {price}/month (standard rate {standard})",
+  sh_held: "Price held until {until}",
 };
 
 export type Key = keyof typeof en;
@@ -1309,6 +1321,18 @@ const hi: Record<Key, string> = {
   r_skipped: "छोड़ दिया। इसके लिए कैटलॉग का डिफ़ॉल्ट इस्तेमाल होगा।",
   lo_title: "क्या छोड़ा और क्यों",
   lo_none: "कुछ नहीं छोड़ा: आपकी हर ज़रूरत आपके बिज़नेस में फ़िट है।",
+  perDay: "/दिन",
+  qt_month: "प्रति माह",
+  qt_day: "प्रति दिन",
+  qt_period: "कीमतें दिखाएँ",
+  qt_share: "WhatsApp पर भेजें",
+  qt_hold: "यह कीमत 48 घंटे रोकें",
+  qt_held: "कीमत रुकी है · {time} बाकी",
+  qt_held_until: "{date} तक रुकी",
+  qt_hold_lapsed: "48 घंटे की होल्ड ख़त्म। यह कीमत रखने के लिए फिर से होल्ड करें।",
+  sh_head: "मेरा Accel Business कोटेशन (Udyam Digital):",
+  sh_price: "कीमत: {price}/महीना (स्टैंडर्ड रेट {standard})",
+  sh_held: "कीमत {until} तक रुकी है",
 };
 
 export const STRINGS: Record<Lang, Record<Key, string>> = { en, hi };

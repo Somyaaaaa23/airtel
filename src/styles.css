@@ -653,6 +653,16 @@ button { cursor: pointer; }
 .trace table { width: 100%; border-collapse: collapse; margin-top: 8px; }
 .trace td { padding: 6px 4px; border-top: 1px solid var(--line); vertical-align: top; }
 
+.seg-toggle { display: inline-flex; align-self: flex-start; padding: 3px; gap: 2px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); }
+.seg-toggle button { border: 0; background: transparent; min-height: 38px; padding: 0 16px; border-radius: 999px; font: 600 13px/1 var(--font-ui); color: var(--text-2); }
+.seg-toggle button[aria-checked="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
+.quote-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.quote-tools .secondary { min-height: 44px; font-size: 14px; }
+.hold-on { margin: 0; display: flex; flex-direction: column; justify-content: center; gap: 2px; padding: 6px 12px; border-radius: var(--r-btn); background: var(--ok-soft); color: var(--ok); }
+.hold-on b { font-size: 14px; }
+.hold-on .fine { color: var(--ok); }
+@media (max-width: 420px) { .quote-tools { grid-template-columns: 1fr; } }
+
 /* Segment hero, smart price, offers, insights */
 .seg-hero { display: flex; gap: 12px; align-items: flex-start; padding: 14px; border-radius: var(--r-card); border: 1px solid var(--primary-line); background: linear-gradient(120deg, var(--primary-soft), var(--surface)); }
 .seg-hero b { font: 600 17px/1.25 var(--font-ui); color: var(--text); }
