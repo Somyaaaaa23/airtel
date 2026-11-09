@@ -11,7 +11,8 @@
     "test": "vitest run",
     "build:demo": "vite build -c vite.demo.config.ts",
     "build:backoffice": "vite-node scripts/build_backoffice.ts",
-    "ocr:specimens": "swift scripts/ocr_specimens.swift ../6ae1873397bc1_digital/YTL_TrackA_Udyam_Digital_Data/kyc_documents > src/data/kyc_ocr.json"
+    "ocr:specimens": "swift scripts/ocr_specimens.swift ../6ae1873397bc1_digital/YTL_TrackA_Udyam_Digital_Data/kyc_documents > src/data/kyc_ocr.json",
+    "otp": "node --env-file-if-exists=.env --env-file-if-exists=server/.env.local server/otp-server.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

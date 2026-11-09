@@ -3,7 +3,7 @@ import type { Order } from "../engine/orders";
 import { computeQuote } from "../engine/quote";
 import { smartPrice } from "../engine/pricing";
 import { fmtDate, inr, t, type Lang } from "../i18n/strings";
-import { OTP_IS_MOCK, sendOtp, verifyOtp } from "../services/otp";
+import { sendOtp, verifyOtp } from "../services/otp";
 import type { QuoteResult } from "./Quote";
 
 export type Signed = NonNullable<Order["contract"]>;
@@ -72,7 +72,7 @@ export function Contract({ lang, quote, phone, signatory, business, today, onSig
             {method === "aadhaar" && <p className="fine">{t(lang, "ctAadhaarNote")}</p>}
             {method === "otp" && (
               <form className="field" onSubmit={(e) => { e.preventDefault(); void sign(); }}>
-                <span className="help">{t(lang, "ctOtpSent", { phone: masked })}{OTP_IS_MOCK ? ` · ${t(lang, "otpHint")}` : ""}</span>
+                <span className="help">{t(lang, "ctOtpSent", { phone: masked })}</span>
                 <label className="vh" htmlFor="sign-otp">{t(lang, "ctOtpLabel")}</label>
                 <input id="sign-otp" className="input num" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))} placeholder="••••••" style={{ letterSpacing: "0.4em" }} />

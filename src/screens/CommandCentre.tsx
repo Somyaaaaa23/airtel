@@ -13,10 +13,10 @@ const NAME: Record<string, string> = { micro: "Micro retail", prof: "Professiona
 const ROUTE: Record<string, string> = { self: "Fully online", assisted: "Online + specialist call", rm: "Relationship manager", priority: "Priority install crew" };
 const FRAME: Record<string, string> = { day: "₹ per day", staff: "₹ per staff member", site: "₹ per site", downtime: "Downtime cost" };
 const LOSS: { k: LossKind; label: string; tone: string }[] = [
-  { k: "process", label: LOSS_LABEL.process.en, tone: "var(--bad)" },
-  { k: "reach", label: LOSS_LABEL.reach.en, tone: "var(--chart)" },
-  { k: "choice", label: LOSS_LABEL.choice.en, tone: "var(--warn)" },
-  { k: "network", label: LOSS_LABEL.network.en, tone: "var(--text)" },
+  { k: "process", label: LOSS_LABEL.process.en, tone: "#d64b3f" },
+  { k: "reach", label: LOSS_LABEL.reach.en, tone: "#b3bdc7" },
+  { k: "choice", label: LOSS_LABEL.choice.en, tone: "#e3b35c" },
+  { k: "network", label: LOSS_LABEL.network.en, tone: "#6b7885" },
 ];
 /** Info tooltip with the metric's definition (staff view is English). */
 export const Def = ({ id, label }: { id: MetricId; label: string }) => <InfoTip text={METRIC_DEFS[id].en} label={label} />;
@@ -100,13 +100,16 @@ export function Overview({ range }: { range: RangeData }) {
   const lost = Object.values(range.loss).reduce((a, b) => a + b, 0);
   return (
     <div className="bo-grid">
-      <FixFirst />
       <section className="panel wide headline">
         <div className="panel-head"><span className="eyebrow">The real problem · {range.label}</span><Def id="lostToProcess" label="Lost to our own process" /></div>
         <h2><em>{pct(lostToOwnProcessPct(range.loss))}</em> of the businesses we lost were lost to our own process, not to price or rivals.</h2>
         <p className="fine">{range.kpis.leads.toLocaleString("en-IN")} leads → {range.kpis.activated} activations ({pct(range.kpis.activationRate)}). Where the other {lost.toLocaleString("en-IN")} went:</p>
         <LossBar loss={range.loss} />
       </section>
+      <FixFirst />
+      <details className="more wide">
+        <summary>Show funnel and segment breakdown</summary>
+        <div className="bo-grid">
       <section className="panel">
         <h2>Where the volume is, the value isn't</h2>
         <p className="fine">Micro is {pct(bo.segments[0].share)} of leads but activates at {pct(bo.segments[0].activationRate)}, and costs {inr(bo.segments[0].costPerActivation)} to win a {inr(bo.segments[0].medianBundle)}/month customer.</p>
@@ -127,7 +130,7 @@ export function Overview({ range }: { range: RangeData }) {
       </section>
       <section className="panel wide">
         <h2>Segments at a glance</h2>
-        <p className="fine">Full quarter. Definitions: <Def id="medianBundle" label="Median bill" /> median bill · <Def id="costPerActivation" label="Cost per activation" /> cost per activation · <Def id="payback" label="Payback" /> payback · <Def id="churn" label="Churn" /> churn</p>
+        <p className="fine">Full quarter. Red marks a number well below the average.</p>
         <div className="tablewrap">
           <table className="bo-table">
             <thead><tr><th>Segment</th><th className="r">Leads</th><th className="r">Activate</th><th className="r">Median bill</th><th className="r">Cost / activation</th><th className="r">Payback</th><th className="r">Days to live</th><th className="r">6-mo churn</th><th>Playbook</th></tr></thead>
@@ -149,6 +152,8 @@ export function Overview({ range }: { range: RangeData }) {
           </table>
         </div>
       </section>
+        </div>
+      </details>
     </div>
   );
 }
@@ -176,6 +181,9 @@ export function Segments() {
   const s = bo.segments.find((x) => x.key === k)!;
   const pb = PLAYBOOKS[k];
   const findings = diagnose(s);
+  const [allFindings, setAllFindings] = useState(false);
+  const [allReasons, setAllReasons] = useState(false);
+  const shownFindings = allFindings ? findings : findings.slice(0, 3);
   return (
     <div className="bo-grid">
       <div className="segpick wide">
@@ -190,7 +198,7 @@ export function Segments() {
       <section className="panel wide">
         <h2>Why {NAME[k].toLowerCase()} is lacking</h2>
         <div className="findings">
-          {findings.map((f) => (
+          {shownFindings.map((f) => (
             <article key={f.title} className={`finding ${f.severity}`}>
               <span className="sev">{f.severity === "high" ? "High" : "Medium"}</span>
               <h3>{f.title}</h3>
@@ -199,21 +207,30 @@ export function Segments() {
             </article>
           ))}
         </div>
+        {findings.length > 3 && <button className="textbtn start-self" onClick={() => setAllFindings((v) => !v)}>{allFindings ? "Show fewer" : `Show ${findings.length - 3} more`}</button>}
       </section>
       <section className="panel">
-        <h2>Numbers</h2>
+        <h2>Key numbers</h2>
         <div className="kpis mini">
           {[
-            ["Median bill", inr(s.medianBundle), "medianBundle"], ["Cost / activation", inr(s.costPerActivation), "costPerActivation"], ["Payback", `${s.paybackMonths} mo`, "payback"],
-            ["Days to live", String(s.daysToLive), "daysToLive"], ["Bundle ÷ spend", `${s.bundleToSpend}×`, "bundleToSpend"], ["6-mo churn", pct(s.churn), "churn"],
-            ["NPS", String(s.nps), "nps"], ["Has GSTIN", pct(s.gstinShare), "kycClear"],
+            ["Median bill", inr(s.medianBundle), "medianBundle"], ["Cost / activation", inr(s.costPerActivation), "costPerActivation"],
+            ["Payback", `${s.paybackMonths} mo`, "payback"], ["6-mo churn", pct(s.churn), "churn"],
           ].map(([l, v, d]) => <div key={l} className="kpi"><span>{l} <Def id={d as MetricId} label={l} /></span><b className="num">{v}</b></div>)}
         </div>
-        <h3>KYC clearance after quote <Def id="kycClear" label="KYC clearance" /></h3>
-        <div className="kycsplit">
-          <div><span>With GSTIN</span><i style={{ width: `${s.kycClear.gst}%` }} /><b className="num">{pct(s.kycClear.gst)}</b></div>
-          <div><span>Without</span><i className="neg" style={{ width: `${Math.max(1, s.kycClear.noGst)}%` }} /><b className="num">{pct(s.kycClear.noGst)}</b></div>
-        </div>
+        <details className="more">
+          <summary>More numbers</summary>
+          <div className="kpis mini">
+            {[
+              ["Days to live", String(s.daysToLive), "daysToLive"], ["Bundle ÷ spend", `${s.bundleToSpend}×`, "bundleToSpend"],
+              ["NPS", String(s.nps), "nps"], ["Has GSTIN", pct(s.gstinShare), "kycClear"],
+            ].map(([l, v, d]) => <div key={l} className="kpi"><span>{l} <Def id={d as MetricId} label={l} /></span><b className="num">{v}</b></div>)}
+          </div>
+          <h3>KYC clearance after quote</h3>
+          <div className="kycsplit">
+            <div><span>With GSTIN</span><i style={{ width: `${s.kycClear.gst}%` }} /><b className="num">{pct(s.kycClear.gst)}</b></div>
+            <div><span>Without</span><i className="neg" style={{ width: `${Math.max(1, s.kycClear.noGst)}%` }} /><b className="num">{pct(s.kycClear.noGst)}</b></div>
+          </div>
+        </details>
       </section>
       <section className="panel">
         <div className="panel-head"><h2>Funnel vs all segments</h2><Def id="stageConv" label="Step conversion" /></div>
@@ -225,7 +242,7 @@ export function Segments() {
           <table className="bo-table">
             <thead><tr><th>Reason</th><th className="r">Leads</th><th className="r">vs avg</th><th className="r">₹/mo at stake <Def id="atStake" label="Revenue at stake" /></th></tr></thead>
             <tbody>
-              {s.reasons.slice(0, 8).map((r) => (
+              {s.reasons.slice(0, allReasons ? 8 : 5).map((r) => (
                 <tr key={r.reason}>
                   <td>{r.reason}<div className="fine">{r.loss === "process" ? "Our process" : r.loss === "reach" ? "Reach" : r.loss === "network" ? "Network" : "Choice"} · at {r.stage}</div></td>
                   <td className="r num">{r.count}</td>
@@ -236,6 +253,7 @@ export function Segments() {
             </tbody>
           </table>
         </div>
+        {s.reasons.length > 5 && <button className="textbtn start-self" onClick={() => setAllReasons((v) => !v)}>{allReasons ? "Show fewer" : "Show all reasons"}</button>}
       </section>
       <section className="panel">
         <h2>Playbook for this segment</h2>

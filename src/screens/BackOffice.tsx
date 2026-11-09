@@ -140,9 +140,7 @@ export function BackOffice({ admin, onSignOut }: { admin: string; onSignOut: () 
           ["Leads", rk.leads.toLocaleString("en-IN"), range.label, "leads"],
           ["Activated", pct(rk.activationRate), `${rk.activated} businesses`, "activated"],
           ["Lead → live", `${rk.avgDaysToActivation} days`, "average, activated leads", "leadToLive"],
-          ["Chasing calls", String(rk.avgFollowUps), "per activated customer", "chasingCalls"],
           ["Cost per activation", inr(rk.costPerActivation), "sales + partner cost", "costPerActivation"],
-          ["Monthly value", inr(rk.avgMonthlyValue), `NPS ${rk.avgNps} · churn ${pct(rk.churn6m)}`, "monthlyValue"],
         ] as [string, string, string, MetricId][]).map(([l, v, sub, d]) => (
           <div key={l} className="kpi"><span>{l} <Def id={d} label={l} /></span><b className="num">{v}</b><small>{sub}</small></div>
         ))}

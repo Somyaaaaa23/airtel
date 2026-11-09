@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Secrets (Twilio keys etc.): never commit
+.env
+.env.*
+!.env.example
+server/.env

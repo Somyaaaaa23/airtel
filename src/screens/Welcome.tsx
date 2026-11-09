@@ -2,9 +2,9 @@
 import { useEffect, useState } from "react";
 import { DemoPanel } from "../components/demos";
 import { OtpInput } from "../components/OtpInput";
-import { IconBack, IconSpark, LangToggle } from "../components/ui";
+import { IconBack, IconCheck, IconSpark, LangToggle, Modal } from "../components/ui";
 import { t, type Lang } from "../i18n/strings";
-import { OTP_IS_MOCK, sendOtp, verifyOtp } from "../services/otp";
+import { sendOtp, verifyOtp } from "../services/otp";
 
 const RESEND_AFTER = 30;
 
@@ -22,6 +22,9 @@ export function Welcome({ lang, setLang, onDone, onPrivacy, onSignedIn, onBack, 
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [wait, setWait] = useState(0);
+  const [sentOpen, setSentOpen] = useState(false);
+  /** Closes the "OTP sent" dialog and puts the cursor in the first code box. */
+  const closeSent = () => { setSentOpen(false); setTimeout(() => document.querySelector<HTMLInputElement>(".otp input")?.focus(), 0); };
 
   useEffect(() => {
     if (wait <= 0) return;
@@ -35,8 +38,8 @@ export function Welcome({ lang, setLang, onDone, onPrivacy, onSignedIn, onBack, 
     setBusy(true);
     const r = await sendOtp(phone);
     setBusy(false);
-    if (!r.ok) return setErr(t(lang, "otpSendError"));
-    setErr(""); setStep("otp"); setWait(RESEND_AFTER);
+    if (!r.ok) return setErr(t(lang, r.failure === "unverified" ? "otp_err_unverified" : r.failure === "wait" ? "otp_err_wait" : r.failure === "network" ? "otp_err_network" : "otpSendError"));
+    setErr(""); setStep("otp"); setWait(RESEND_AFTER); setSentOpen(true);
   };
   const resend = async () => {
     setOtp(""); setErr("");
@@ -74,7 +77,6 @@ export function Welcome({ lang, setLang, onDone, onPrivacy, onSignedIn, onBack, 
           <section className="auth-card" aria-labelledby="auth-t">
             <div className="auth-steps" aria-hidden="true">{[1, 2, 3].map((i) => <i key={i} className={i <= n ? "on" : ""} />)}</div>
             <span className="auth-step">{t(lang, "au_step", { n })}</span>
-            {OTP_IS_MOCK && step !== "name" && <p className="demo-banner" role="note">{t(lang, "au_demo")}</p>}
 
             {step === "phone" && (
               <>
@@ -91,6 +93,7 @@ export function Welcome({ lang, setLang, onDone, onPrivacy, onSignedIn, onBack, 
                     {err ? <span className="err" role="alert">{err}</span> : <span id="phone-help" className="help">{t(lang, "phoneHelp")}</span>}
                   </div>
                   <button className="primary" type="submit" disabled={busy}>{busy ? <><span className="spinner" />{t(lang, "au_sending")}</> : t(lang, "sendOtp")}</button>
+                  <p className="fine consent-note">{t(lang, "au_consent")}</p>
                 </form>
               </>
             )}
@@ -135,6 +138,16 @@ export function Welcome({ lang, setLang, onDone, onPrivacy, onSignedIn, onBack, 
           </section>
           {demoMode && <button className="secondary demo-open" onClick={onOpenDemos}><IconSpark />{t(lang, "dm_title")}</button>}
         </div>
+        {sentOpen && (
+          <Modal label={t(lang, "au_sent_title")} onClose={closeSent} className="modal-sm">
+            <div className="sent-dialog">
+              <span className="badge" aria-hidden="true"><IconCheck /></span>
+              <h2>{t(lang, "au_sent_title")}</h2>
+              <p className="num">{t(lang, "au_sent_body", { phone: `${phone.slice(0, 5)} ${phone.slice(5)}` })}</p>
+              <button className="primary" onClick={closeSent}>{t(lang, "au_sent_ok")}</button>
+            </div>
+          </Modal>
+        )}
         {demoMode && <DemoPanel lang={lang} onTry={onTryDemo} onViewAll={onOpenDemos} />}
       </main>
     </div>

@@ -715,6 +715,13 @@ const en = {
   unit_min: "min",
   dm_eyebrow: "Demo",
   gr_name: "Grievance Officer, Accel Business",
+  au_consent: "By tapping Send OTP, you agree to receive a one-time code by SMS on this number. Standard SMS rates may apply.",
+  otp_err_unverified: "This number can't get codes yet: the Twilio trial account only sends to verified numbers. Add it under Verified Caller IDs, or use demo mode.",
+  otp_err_network: "Can't reach the OTP service. Check that it's running and try again.",
+  otp_err_wait: "A code was just sent. Wait 30 seconds before asking for another.",
+  au_sent_title: "OTP sent",
+  au_sent_body: "We've sent a 6-digit code to +91 {phone}. Enter it on the next screen.",
+  au_sent_ok: "OK",
 };
 
 export type Key = keyof typeof en;
@@ -1413,6 +1420,13 @@ const hi: Record<Key, string> = {
   unit_min: "मिनट",
   dm_eyebrow: "डेमो",
   gr_name: "शिकायत अधिकारी, Accel Business",
+  au_consent: "‘OTP भेजें’ दबाकर आप इस नंबर पर SMS से एक बार का कोड पाने के लिए सहमति देते हैं। सामान्य SMS दरें लग सकती हैं।",
+  otp_err_unverified: "इस नंबर पर अभी कोड नहीं जा सकता: Twilio ट्रायल अकाउंट सिर्फ़ वेरिफ़ाइड नंबरों पर भेजता है। इसे Verified Caller IDs में जोड़ें या डेमो मोड इस्तेमाल करें।",
+  otp_err_network: "OTP सेवा तक नहीं पहुँच पाए। जाँचें कि वह चल रही है और फिर कोशिश करें।",
+  otp_err_wait: "अभी-अभी कोड भेजा गया है। दूसरा माँगने से पहले 30 सेकंड रुकें।",
+  au_sent_title: "OTP भेज दिया गया",
+  au_sent_body: "हमने +91 {phone} पर 6 अंकों का कोड भेजा है। अगली स्क्रीन पर उसे डालें।",
+  au_sent_ok: "ठीक है",
 };
 
 export const STRINGS: Record<Lang, Record<Key, string>> = { en, hi };

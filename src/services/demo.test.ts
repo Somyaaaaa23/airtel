@@ -39,3 +39,12 @@ describe("demo mode", () => {
     expect(loadDemoMode()).toBe(true);
   });
 });
+
+describe("OTP send failures", () => {
+  it("explains a trial-account block separately from network errors", async () => {
+    const { sendFailure } = await import("./otp");
+    expect(sendFailure({ ok: false, code: 21608, error: "unverified" })).toBe("unverified");
+    expect(sendFailure({ ok: false, error: "network" })).toBe("network");
+    expect(sendFailure({ ok: false, code: 60200, error: "Invalid parameter" })).toBe("other");
+  });
+});
